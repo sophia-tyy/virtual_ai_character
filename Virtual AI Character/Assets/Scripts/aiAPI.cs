@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,32 +20,32 @@ public class GeminiChat : MonoBehaviour
     [System.Serializable]
     public class ChatMessage
     {
-        [SerializeField] public string role;
-        [SerializeField] public List<Part> parts = new List<Part>();
+        public string role;
+        public List<Part> parts = new List<Part>();
     }
 
     [System.Serializable]
     public class Part
     {
-        [SerializeField] public string text;
+        public string text;
     }
 
     [System.Serializable]
     public class RequestBody
     {
-        [SerializeField] public List<ChatMessage> contents = new List<ChatMessage>();
+        public List<ChatMessage> contents = new List<ChatMessage>();
     }
 
     [System.Serializable]
     public class ResponseBody
     {
-        [SerializeField] public List<Candidate> candidates;
+        public List<Candidate> candidates;
     }
 
     [System.Serializable]
     public class Candidate
     {
-        [SerializeField] public ChatMessage content;
+        public ChatMessage content;
     }
 
     void Start()
@@ -89,7 +88,7 @@ public class GeminiChat : MonoBehaviour
     }
 
     // Send user message, get AI response, and append to history
-    public IEnumerator SendMessage(string userText)
+    new public IEnumerator SendMessage(string userText)
     {
         // Add user's new message to history
         AddMessage("user", userText);
