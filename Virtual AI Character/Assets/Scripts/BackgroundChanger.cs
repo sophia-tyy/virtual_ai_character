@@ -16,4 +16,9 @@ public class BackgroundChanger : MonoBehaviour
         backgroundObjects[nextBackgroundIndex].SetActive(true);
         currentBackgroundIndex = nextBackgroundIndex;
     }
+
+    public void ChangeBackgroundMusic()
+    {
+        
+    }
 }
