@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class InputHandler : MonoBehaviour
 {
@@ -9,7 +10,8 @@ public class InputHandler : MonoBehaviour
     public TMP_InputField inputField;
 
     public GameObject audioInputPanel;
-    // Add audio input UI elements here as needed, e.g., Button to start/stop recording
+    public Button recordButton;
+    public TMP_Text audioStatusText;
 
     public GameObject outputPanel;
     public TMP_Text outputText;
@@ -18,8 +20,16 @@ public class InputHandler : MonoBehaviour
     public Button toggleTextInputButton;
     public Button toggleAudioInputButton;
 
+    // input mode //
     private enum InputMode { None, Text, Audio }
     private InputMode currentInputMode = InputMode.None;
+
+    // audio input //
+    private AudioClip audioInput;
+    private bool isRecording = false;   // must need?
+    private string microphoneDevice;
+    private int sampleRate = 16000;     // what is this?
+    private AudioHandler audioHandler;
 
     void Start()
     {
@@ -32,7 +42,36 @@ public class InputHandler : MonoBehaviour
         nextInputButton.onClick.AddListener(PrepareForNextInput);
 
         inputField.onSubmit.AddListener(OnTextInputSubmitted);
-        // Setup audio input submission callbacks as needed
+
+        // audio input setup //
+        recordButton.onClick.AddListener(( ) => { });
+        EventTrigger recordButtonTrigger = recordButton.gameObject.AddComponent<EventTrigger>();
+
+        EventTrigger.Entry pointerDown = new EventTrigger.Entry();
+        pointerDown.eventID = EventTriggerType.PointerDown;
+        pointerDown.callback.AddListener((data) => { StartRecording(); });
+        recordButtonTrigger.triggers.Add(pointerDown);
+
+        EventTrigger.Entry pointerUp = new EventTrigger.Entry();
+        pointerUp.eventID = EventTriggerType.PointerUp;
+        pointerUp.callback.AddListener((data) => { StopRecording(); });
+        recordButtonTrigger.triggers.Add(pointerUp);
+
+        if (Microphone.devices.Length > 0)
+        {
+            microphoneDevice = Microphone.devices[0];
+        }
+        else
+        {
+            microphoneDevice = null;
+            Debug.LogWarning("No microphone detected");
+        }
+
+        audioHandler = FindObjectOfType<AudioHandler>();
+        if (audioHandler == null)
+        {
+            Debug.LogWarning("AudioHandler script not found in scene");
+        }
     }
 
     void ToggleTextInput()
@@ -82,7 +121,7 @@ public class InputHandler : MonoBehaviour
         inputPanel.SetActive(false);
         outputPanel.SetActive(false);
         currentInputMode = InputMode.Audio;
-        // Initialize audio recording UI or state here
+        audioStatusText.text = "Press and hold to record";
     }
 
     public void OnTextInputSubmitted(string text)
@@ -96,7 +135,6 @@ public class InputHandler : MonoBehaviour
         currentInputMode = InputMode.None;
     }
 
-    // Call this method when audio input finishes and delivers a response string
     public void OnAudioInputReceived(string response)
     {
         if (currentInputMode != InputMode.Audio)
@@ -112,5 +150,30 @@ public class InputHandler : MonoBehaviour
     {
         outputPanel.SetActive(false);
         ShowTextInput();
+    }
+
+    void StartRecording()
+    {
+        if (isRecording || microphoneDevice == null) return;
+        audioStatusText.text = "Now recording";
+        isRecording = true;
+        audioInput = Microphone.Start(microphoneDevice, false, 10, sampleRate);
+    }
+
+    void StopRecording()
+    {
+        if (!isRecording) return;
+        Microphone.End(microphoneDevice);
+        isRecording = false;
+
+        audioStatusText.text = "Processing...";
+        if (audioHandler == null)
+        {
+            audioStatusText.text = "Cannot process audio";
+        }
+        else
+        {
+            audioHandler.ProcessAudio(audioInput, OnAudioInputReceived);
+        }
     }
 }
