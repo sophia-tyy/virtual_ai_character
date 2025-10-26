@@ -5,30 +5,29 @@ using UnityEngine.EventSystems;
 
 public class InputHandler : MonoBehaviour
 {
-    [Header("References")]
-    public GameObject inputPanel;
-    public TMP_InputField inputField;
-
-    public GameObject audioInputPanel;
-    public Button recordButton;
-    public TMP_Text audioStatusText;
-
-    public GameObject outputPanel;
-    public TMP_Text outputText;
-    public Button nextInputButton;
-
-    public Button toggleTextInputButton;
-    public Button toggleAudioInputButton;
-
     // input mode //
     private enum InputMode { None, Text, Audio }
     private InputMode currentInputMode = InputMode.None;
+    // AI //
+    public AIChatbot aiChatbot;
 
+    [Header("References")]
+    // output //
+    public GameObject outputPanel;
+    public TMP_Text outputText;
+    public Button nextInputButton;
+    // text input //
+    public Button toggleTextInputButton;
+    public GameObject inputPanel;
+    public TMP_InputField inputField;
     // audio input //
+    public Button toggleAudioInputButton;
+    public GameObject audioInputPanel;
+    public Button recordButton;
+    public TMP_Text audioStatusText;
     private AudioClip audioInput;
-    private bool isRecording = false;   // must need?
+    private bool isRecording = false;
     private string microphoneDevice;
-    private int sampleRate = 16000;     // what is this?
     private AudioHandler audioHandler;
 
     void Start()
@@ -129,10 +128,13 @@ public class InputHandler : MonoBehaviour
         if (currentInputMode != InputMode.Text)
             return;
 
-        inputPanel.SetActive(false);
-        outputPanel.SetActive(true);
-        outputText.text = $"You just entered: {text}";
-        currentInputMode = InputMode.None;
+        StartCoroutine(aiChatbot.GetAIResponse(text, (aiResponse) =>
+        {
+            inputPanel.SetActive(false);
+            outputPanel.SetActive(true);
+            outputText.text = $"{aiResponse}";
+            currentInputMode = InputMode.None;
+        }));
     }
 
     public void OnAudioInputReceived(string response)
@@ -140,10 +142,13 @@ public class InputHandler : MonoBehaviour
         if (currentInputMode != InputMode.Audio)
             return;
 
-        audioInputPanel.SetActive(false);
-        outputPanel.SetActive(true);
-        outputText.text = $"You just said: {response}";
-        currentInputMode = InputMode.None;
+        StartCoroutine(aiChatbot.GetAIResponse(response, (aiResponse) =>
+        {
+            audioInputPanel.SetActive(false);
+            outputPanel.SetActive(true);
+            outputText.text = $"{aiResponse}";
+            currentInputMode = InputMode.None;
+        }));
     }
 
     void PrepareForNextInput()
@@ -157,7 +162,7 @@ public class InputHandler : MonoBehaviour
         if (isRecording || microphoneDevice == null) return;
         audioStatusText.text = "Now recording";
         isRecording = true;
-        audioInput = Microphone.Start(microphoneDevice, false, 10, sampleRate);
+        audioInput = Microphone.Start(microphoneDevice, false, 10, 16000);
     }
 
     void StopRecording()
