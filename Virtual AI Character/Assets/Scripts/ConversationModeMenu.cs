@@ -9,6 +9,7 @@ public class ConversationModeMenu : MonoBehaviour
     public GameObject buttonPrefab;
     public Transform menuPanel;
     public String[] conversationModes = { "Happy", "Caring" };
+    [SerializeField] private AIChatbot aiChatbot;
 
     void Start()
     {
@@ -16,15 +17,25 @@ public class ConversationModeMenu : MonoBehaviour
 
         foreach (String conversationMode in conversationModes)
         {
+            string mode = conversationMode; // capture for closure
             GameObject btnObj = Instantiate(buttonPrefab, menuPanel);
             Button btn = btnObj.GetComponent<Button>();
             TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>();
-            btnText.text = conversationMode;
+            btnText.text = mode;
 
             btn.onClick.AddListener(() =>
             {
-                // TODO: change prompt
-                Debug.Log("Conversation mode changed to " + conversationMode);
+                // Map conversation mode to a Resources prompt filename (adjust mapping as needed)
+                string promptResourceName = "system_prompt_" + mode.ToLower(); // expects Resources/<name>.txt
+                if (aiChatbot != null)
+                {
+                    aiChatbot.SetPromptName(promptResourceName, true);
+                    Debug.Log("Conversation mode changed to " + mode + ", applied prompt: " + promptResourceName);
+                }
+                else
+                {
+                    Debug.LogWarning("AIChatbot reference not set on ConversationModeMenu. Assign it in the Inspector.");
+                }
             });
         }
     }

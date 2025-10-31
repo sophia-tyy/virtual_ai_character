@@ -16,7 +16,77 @@ public class AIChatbot : MonoBehaviour
     public static string model = "gemini-2.5-flash-lite";
     public string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     public bool geminiFail = false; // Track if Gemini succeeded
-    string prompt_name = "system_prompt"; // Name of the system prompt file in Resources
+    string prompt_name = "system_prompt_default"; // Name of the system prompt file in Resources
+
+    // Set a new prompt name and optionally load & apply it immediately
+    public void SetPromptName(string newPromptName, bool applyImmediately = true)
+    {
+        if (string.IsNullOrEmpty(newPromptName))
+            return;
+        prompt_name = newPromptName;
+        if (applyImmediately)
+            ApplySystemPrompt();
+    }
+
+    // Load the system prompt from Resources using the current prompt_name and add it to history
+    public void ApplySystemPrompt()
+    {
+        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
+        string systemPrompt;
+        if (promptAsset != null)
+        {
+            systemPrompt = promptAsset.text;
+            Debug.Log($"Applied system prompt '{prompt_name}'");
+        }
+        else
+        {
+            systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
+            Debug.LogWarning($"Prompt '{prompt_name}' not found in Resources when applying system prompt. Using default prompt.");
+        }
+
+        // Replace existing system prompt in chatHistory if present, otherwise add it
+        ReplaceOrAddSystemPrompt(systemPrompt);
+    }
+
+    // Replace the first existing system/model message in chatHistory with the provided text.
+    // If none exists, appends a new system/model message. Also syncs the change to the LLMCharacter if initialized.
+    private void ReplaceOrAddSystemPrompt(string systemPrompt)
+    {
+        if (string.IsNullOrEmpty(systemPrompt))
+            return;
+
+        bool replaced = false;
+        for (int i = 0; i < chatHistory.Count; i++)
+        {
+            var msg = chatHistory[i];
+            if (msg == null) continue;
+            var role = (msg.role ?? "").ToLowerInvariant();
+            if (role == "model" || role == "system")
+            {
+                if (msg.parts == null || msg.parts.Count == 0)
+                    msg.parts = new List<Part> { new Part { text = systemPrompt } };
+                else
+                    msg.parts[0].text = systemPrompt;
+
+                chatHistory[i] = msg;
+                replaced = true;
+
+                // Sync to LLMCharacter if it is initialized
+                if (isLlamaInitialized && aiCharacter != null)
+                {
+                    // Try to mirror: add the system prompt to aiCharacter's history as well
+                    aiCharacter.AddMessage(systemPrompt, msg.role);
+                }
+
+                break;
+            }
+        }
+
+        if (!replaced)
+        {
+            AddMessage("model", systemPrompt);
+        }
+    }
 
     // LLMUnity Llama settings
     [Header("Llama Fallback")]
