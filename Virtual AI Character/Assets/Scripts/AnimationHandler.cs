@@ -140,6 +140,7 @@ public class EmotionAnimatorLink : MonoBehaviour
             triggered = true;
             lastTriggeredEmotion = bestLower;
             lastTriggeredValue = bestVal;
+            Debug.Log($"[EmotionAnimatorLink] Triggered animation '{trig}' for emotion '{best}' with value {bestVal:F2}");
         }
 
         // If value changed sufficiently from the last triggered value, allow retrigger
