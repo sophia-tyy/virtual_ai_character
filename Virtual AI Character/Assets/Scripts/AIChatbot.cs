@@ -11,14 +11,12 @@ using UnityEditor;
 
 public class AIChatbot : MonoBehaviour
 {
-    // Gemini API settings
-    public static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA"; // Replace with your Gemini key
+    public static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA";
     public static string model = "gemini-2.5-flash-lite";
     public string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
-    public bool geminiFail = false; // Track if Gemini succeeded
-    string prompt_name = "system_prompt_default"; // Name of the system prompt file in Resources
+    public bool geminiFail = false;
+    string prompt_name = "system_prompt_default";
 
-    // Set a new prompt name and optionally load & apply it immediately
     public void SetPromptName(string newPromptName, bool applyImmediately = true)
     {
         if (string.IsNullOrEmpty(newPromptName))
@@ -44,12 +42,9 @@ public class AIChatbot : MonoBehaviour
             Debug.LogWarning($"Prompt '{prompt_name}' not found in Resources when applying system prompt. Using default prompt.");
         }
 
-        // Replace existing system prompt in chatHistory if present, otherwise add it
         ReplaceOrAddSystemPrompt(systemPrompt);
     }
 
-    // Replace the first existing system/model message in chatHistory with the provided text.
-    // If none exists, appends a new system/model message. Also syncs the change to the LLMCharacter if initialized.
     private void ReplaceOrAddSystemPrompt(string systemPrompt)
     {
         if (string.IsNullOrEmpty(systemPrompt))
@@ -71,10 +66,8 @@ public class AIChatbot : MonoBehaviour
                 chatHistory[i] = msg;
                 replaced = true;
 
-                // Sync to LLMCharacter if it is initialized
                 if (isLlamaInitialized && aiCharacter != null)
                 {
-                    // Try to mirror: add the system prompt to aiCharacter's history as well
                     aiCharacter.AddMessage(systemPrompt, msg.role);
                 }
 
@@ -90,11 +83,23 @@ public class AIChatbot : MonoBehaviour
 
     // LLMUnity Llama settings
     [Header("Llama Fallback")]
-    [SerializeField] private LLMCharacter aiCharacter; // Drag GameObject with LLMCharacter here
+    [SerializeField] private LLMCharacter aiCharacter;
     private bool isLlamaInitialized = false;
 
     // Chat history: Shared for Gemini and Llama
     public List<ChatMessage> chatHistory = new List<ChatMessage>();
+
+    // Latest parsed emotions from the most recent model response (shared for Gemini and Llama)
+    public Dictionary<string, float> currentEmotions = new Dictionary<string, float>();
+
+    // // Helper to read an emotion value safely
+    // public float GetEmotionValue(string name, float defaultValue = 0f)
+    // {
+    //     if (string.IsNullOrEmpty(name)) return defaultValue;
+    //     if (currentEmotions != null && currentEmotions.TryGetValue(name, out float v))
+    //         return v;
+    //     return defaultValue;
+    // }
 
     // Classes for JSON serialization (unchanged)
     [System.Serializable]
@@ -141,9 +146,6 @@ public class AIChatbot : MonoBehaviour
             Debug.Log("Internet connected!");
         }
 
-        ListAllResources();
-
-        // Load system prompt from Resources/SystemPrompt.txt
         TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
         string systemPrompt;
         if (promptAsset != null)
@@ -210,40 +212,6 @@ public class AIChatbot : MonoBehaviour
         }
     }
 
-    // Public helper: list all assets under Assets/Resources and return their names.
-    // Also logs the list to the Unity Console for quick debugging.
-    public void ListAllResources()
-    {
-#if UNITY_EDITOR
-        // In Editor: use AssetDatabase to enumerate actual files under Assets/Resources
-        var guids = AssetDatabase.FindAssets("", new[] { "Assets/Resources" });
-        List<string> names = new List<string>();
-        foreach (var guid in guids)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-            if (obj == null) continue;
-            if (!string.IsNullOrEmpty(obj.name) && !names.Contains(obj.name))
-                names.Add(obj.name);
-        }
-        Debug.Log($"Assets/Resources contains {names.Count} assets: {string.Join(", ", names)}");
-        return;
-#else
-        // At runtime: enumerate what Resources includes
-        var all = Resources.LoadAll<UnityEngine.Object>("");
-        List<string> names = new List<string>();
-        foreach (var a in all)
-        {
-            if (a == null) continue;
-            if (!string.IsNullOrEmpty(a.name) && !names.Contains(a.name))
-                names.Add(a.name);
-        }
-
-        Debug.Log($"Resources contains {names.Count} assets: {string.Join(", ", names)}");
-#endif
-    }
-
-    // Initialize Llama and sync initial chat history
     private void InitializeLlama()
     {
         if (aiCharacter == null)
@@ -277,7 +245,6 @@ public class AIChatbot : MonoBehaviour
         Debug.Log("Llama initialized and chat history synced.");
     }
 
-    // Add a message to shared history (Gemini and Llama)
     private void AddMessage(string role, string text)
     {
         var message = new ChatMessage { role = role };
@@ -291,20 +258,15 @@ public class AIChatbot : MonoBehaviour
         }
     }
 
-    // Send message: Try Gemini, fallback to Llama
     public IEnumerator SendMessageGemini(string userText)
     {
-        // Add user message to history
         AddMessage("user", userText);
         Debug.Log("User: " + userText);
 
-        // Try Gemini first
-        
         string aiResponse = "";
 
         if (Application.internetReachability != NetworkReachability.NotReachable)
         {
-            // Build Gemini request
             var requestBody = new RequestBody { contents = chatHistory };
             var jsonBody = JsonConvert.SerializeObject(requestBody, Formatting.Indented);
 
@@ -316,7 +278,6 @@ public class AIChatbot : MonoBehaviour
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("x-goog-api-key", apiKey);
 
-                // Send and wait
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
@@ -329,8 +290,8 @@ public class AIChatbot : MonoBehaviour
                         aiResponse = response.candidates[0].content.parts[0].text;
                         Debug.Log("Gemini AI (raw): " + aiResponse);
 
-                        // Parse model response for text + emotion
                         ParseAIResponse(aiResponse, out string parsedText, out Dictionary<string, float> emotions);
+                        currentEmotions = emotions ?? new Dictionary<string, float>();
                         Debug.Log($"Gemini parsed text: {parsedText}");
                         if (emotions.Count > 0)
                         {
@@ -338,7 +299,6 @@ public class AIChatbot : MonoBehaviour
                                 Debug.Log($"{kv.Key}: {kv.Value}");
                         }
 
-                        // Store only the user-facing text in history
                         AddMessage("model", parsedText);
                     }
                     else
@@ -362,7 +322,6 @@ public class AIChatbot : MonoBehaviour
 
     }
 
-    // Generate response using Llama
     private IEnumerator GenerateLlamaResponse(string userText, System.Action<string> onComplete)
     {
         string response = "";
@@ -370,23 +329,19 @@ public class AIChatbot : MonoBehaviour
         AddMessage("user", userText);
         Debug.Log("User: " + userText);
 
-        // Use LLMCharacter's Chat method (history already synced via AddMessage)
-        // The Chat callback may stream chunks; collect them and parse only after completion.
         response = "";
         aiCharacter.Chat(userText, (reply) =>
         {
-            // Append chunks (some models stream), but we'll parse the full text at the end
             response += reply;
         }, () =>
         {
             completed = true;
         });
 
-        // Wait for Llama to finish
         yield return new WaitUntil(() => completed);
 
-        // Parse the final Llama response for JSON text+emotion and return the cleaned text
         ParseAIResponse(response, out string llamaText, out Dictionary<string, float> llamaEmotions);
+        currentEmotions = llamaEmotions ?? new Dictionary<string, float>();
         Debug.Log($"Llama parsed text: {llamaText}");
         if (llamaEmotions.Count > 0)
         {
@@ -397,7 +352,6 @@ public class AIChatbot : MonoBehaviour
         onComplete?.Invoke(llamaText);
     }
 
-    // Test: Press Space to send a sample message
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -410,7 +364,7 @@ public class AIChatbot : MonoBehaviour
             {
                 if (!isLlamaInitialized)
                 {
-                    InitializeLlama(); // Ensure Llama is initialized if Gemini failed
+                    InitializeLlama();
                 }
                 StartCoroutine(GenerateLlamaResponse("Tell me a joke about Unity game development.", (response) =>
                 {
