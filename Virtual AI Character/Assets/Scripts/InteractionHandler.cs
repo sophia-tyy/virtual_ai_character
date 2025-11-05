@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class InputHandler : MonoBehaviour
+public class InteractionHandler : MonoBehaviour
 {
     // input mode //
     private enum InputMode { None, Text, Audio }
@@ -29,6 +29,8 @@ public class InputHandler : MonoBehaviour
     private bool isRecording = false;
     private string microphoneDevice;
     private AudioHandler audioHandler;
+    // AI audio output //
+    public AudioSource speechAudioSource;
 
     void Start()
     {
@@ -130,10 +132,15 @@ public class InputHandler : MonoBehaviour
 
         StartCoroutine(aiChatbot.GetAIResponse(text, (aiResponse) =>
         {
-            inputPanel.SetActive(false);
-            outputPanel.SetActive(true);
-            outputText.text = $"{aiResponse}";
-            currentInputMode = InputMode.None;
+            audioHandler.SpeakText(aiResponse, (audioResponse) =>
+            {
+                speechAudioSource.clip = audioResponse;
+                speechAudioSource.Play();
+                inputPanel.SetActive(false);
+                outputPanel.SetActive(true);
+                outputText.text = $"{aiResponse}";
+                currentInputMode = InputMode.None;
+            });
         }));
     }
 
@@ -144,10 +151,15 @@ public class InputHandler : MonoBehaviour
 
         StartCoroutine(aiChatbot.GetAIResponse(response, (aiResponse) =>
         {
-            audioInputPanel.SetActive(false);
-            outputPanel.SetActive(true);
-            outputText.text = $"{aiResponse}";
-            currentInputMode = InputMode.None;
+            audioHandler.SpeakText(aiResponse, (audioResponse) =>
+            {
+                speechAudioSource.clip = audioResponse;
+                speechAudioSource.Play();
+                audioInputPanel.SetActive(false);
+                outputPanel.SetActive(true);
+                outputText.text = $"{aiResponse}";
+                currentInputMode = InputMode.None;
+            });
         }));
     }
 

@@ -11,10 +11,13 @@ using Microsoft.CognitiveServices.Speech.Audio;
 public class AudioHandler : MonoBehaviour
 {
     public delegate void SpeechToTextCallback(string result);
+    public delegate void TextToSpeechCallback(AudioClip result);
 
     // Azure setup //
     private string subscriptionKey = "1SXl35qi911Sqd0iE6aphYpvHMf4NaiB2cp6NulSOBnVxxnggb5qJQQJ99BJAC5T7U2XJ3w3AAAYACOGOHbN";
     private string serviceRegion = "francecentral";
+
+    // public AudioSource speechAudioSource;
 
     public void ProcessAudio(AudioClip clip, SpeechToTextCallback callback)
     {
@@ -30,7 +33,7 @@ public class AudioHandler : MonoBehaviour
     private IEnumerator ProcessAudioCoroutine(AudioClip clip, SpeechToTextCallback callback)
     {
         string recognizedText = "Recognizing...";
-        var task = RecognizeSpeechFromAudioClipAsync(clip);
+        var task = SpeechToTextAsync(clip);
         while (!task.IsCompleted) yield return null;
 
         if (task.Exception != null)
@@ -42,7 +45,7 @@ public class AudioHandler : MonoBehaviour
         callback?.Invoke(recognizedText);
     }
 
-    private async Task<string> RecognizeSpeechFromAudioClipAsync(AudioClip clip)
+    private async Task<string> SpeechToTextAsync(AudioClip clip)
     {
         byte[] wavBytes = AudioClipToWav(clip);
 
@@ -124,5 +127,73 @@ public class AudioHandler : MonoBehaviour
         }
     }
 
-    // methods for text-to-speech :D
+    public void SpeakText(string text, TextToSpeechCallback callback)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            Debug.LogWarning("AudioHandler: SpeakText called with empty text.");
+            callback?.Invoke(null);
+            return;
+        }
+        StartCoroutine(SpeakTextCoroutine(text, callback));
+    }
+
+    private IEnumerator SpeakTextCoroutine(string text, TextToSpeechCallback callback)
+    {
+        var task = TextToSpeechAsync(text);
+        while (!task.IsCompleted) yield return null;
+
+        float[] audioData = task.Result;
+        if (audioData == null)
+        {
+            Debug.LogError($"Text-to-Speech error: {task.Exception.Message}");
+        }
+        else
+        {
+            int sampleCount = audioData.Length;
+            AudioClip audioClip = AudioClip.Create("TTS_AudioClip", sampleCount, 1, 16000, false);
+            audioClip.SetData(audioData, 0);
+            callback?.Invoke(audioClip);
+        }
+    }
+
+    private async Task<float[]> TextToSpeechAsync(string text)
+    {
+        var config = SpeechConfig.FromSubscription(subscriptionKey, serviceRegion);
+        config.SpeechSynthesisVoiceName = "en-US-AnaNeural";
+
+        using (var synthesizer = new SpeechSynthesizer(config, null))
+        {
+            var result = await synthesizer.SpeakTextAsync(text).ConfigureAwait(false);
+
+            if (result.Reason == ResultReason.SynthesizingAudioCompleted)
+            {
+                return ConvertAudioDataToFloat(result.AudioData);
+            }
+            else if (result.Reason == ResultReason.Canceled)
+            {
+                var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
+                Debug.LogError($"TTS canceled: {cancellation.Reason} - {cancellation.ErrorDetails}");
+                return null;
+            }
+            else
+            {
+                Debug.LogError("TTS synthesis failed.");
+                return null;
+            }
+        }
+    }
+
+    private float[] ConvertAudioDataToFloat(byte[] audioBytes)
+    {
+        int samples = audioBytes.Length / 2;
+        float[] audioFloats = new float[samples];
+
+        for (int i = 0; i < samples; i++)
+        {
+            short sample = (short)(audioBytes[i * 2] | (audioBytes[i * 2 + 1] << 8));
+            audioFloats[i] = sample / 32768f;
+        }
+        return audioFloats;
+    }
 }
