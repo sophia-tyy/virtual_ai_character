@@ -6,10 +6,17 @@ using System.Collections.Generic;
 public class BackgroundMusicMenu : MonoBehaviour
 {
     public Button toggleMenuButton;
+    public Slider volumeSlider;
+    public Image volumeIcon;
     public GameObject buttonPrefab;
     public Transform menuPanel;
     public AudioSource audioSource;
     private List<GameObject> selectedIndicators = new List<GameObject>();
+    
+    private Sprite volumeHighIcon;
+    private Sprite volumeMediumIcon;
+    private Sprite volumeLowIcon;
+    private Sprite volumeMuteIcon;
 
     void Start()
     {
@@ -48,6 +55,25 @@ public class BackgroundMusicMenu : MonoBehaviour
                 selectedIndicator.SetActive(true);
             });
         }
+
+        volumeHighIcon = Resources.Load<Sprite>("VolumeIcon/volume_high");
+        volumeMediumIcon = Resources.Load<Sprite>("VolumeIcon/volume_medium");
+        volumeLowIcon = Resources.Load<Sprite>("VolumeIcon/volume_low");
+        volumeMuteIcon = Resources.Load<Sprite>("VolumeIcon/volume_mute");
+        volumeSlider.value = audioSource.volume;
+        volumeSlider.onValueChanged.AddListener((value) =>
+        {
+            audioSource.volume = value;
+            if (value == 0)
+                volumeIcon.sprite = volumeMuteIcon;
+            else if (value <= 0.33f)
+                volumeIcon.sprite = volumeLowIcon;
+            else if (value <= 0.66f)
+                volumeIcon.sprite = volumeMediumIcon;
+            else
+                volumeIcon.sprite = volumeHighIcon;
+        });
+        
     }
 
     void ToggleMenu()
