@@ -110,6 +110,7 @@ public class InteractionHandler : MonoBehaviour
     void ShowTextInput()
     {
         inputPanel.SetActive(true);
+        inputField.interactable = true;
         audioInputPanel.SetActive(false);
         outputPanel.SetActive(false);
         currentInputMode = InputMode.Text;
@@ -129,6 +130,8 @@ public class InteractionHandler : MonoBehaviour
     {
         if (currentInputMode != InputMode.Text)
             return;
+
+        inputField.interactable = false;
 
         StartCoroutine(aiChatbot.GetAIResponse(text, (aiResponse) =>
         {
