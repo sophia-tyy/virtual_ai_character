@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class BackgroundMusicMenu : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class BackgroundMusicMenu : MonoBehaviour
     public GameObject buttonPrefab;
     public Transform menuPanel;
     public AudioSource audioSource;
+    private List<GameObject> selectedIndicators = new List<GameObject>();
 
     void Start()
     {
@@ -22,11 +24,28 @@ public class BackgroundMusicMenu : MonoBehaviour
             TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>();
             btnText.text = musicClip.name;
 
+            GameObject selectedIndicator = btnObj.transform.Find("SelectedIndicator").gameObject;
+            if (audioSource.clip == musicClip)
+            {
+                selectedIndicator.SetActive(true);
+            }
+            else
+            {
+                selectedIndicator.SetActive(false);
+            }
+            selectedIndicators.Add(selectedIndicator);
+
             btn.onClick.AddListener(() =>
             {
                 audioSource.Stop();
                 audioSource.clip = musicClip;
                 audioSource.Play();
+
+                foreach (GameObject indicator in selectedIndicators)
+                {
+                    indicator.SetActive(false);
+                }
+                selectedIndicator.SetActive(true);
             });
         }
     }

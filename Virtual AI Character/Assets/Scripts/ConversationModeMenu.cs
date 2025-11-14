@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using System.Collections.Generic;
 
 public class ConversationModeMenu : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class ConversationModeMenu : MonoBehaviour
     public Transform menuPanel;
     public String[] conversationModes = { "Happy", "Caring" };
     [SerializeField] private AIChatbot aiChatbot;
+    private List<GameObject> selectedIndicators = new List<GameObject>();
 
     void Start()
     {
@@ -22,6 +24,10 @@ public class ConversationModeMenu : MonoBehaviour
             Button btn = btnObj.GetComponent<Button>();
             TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>();
             btnText.text = mode;
+
+            GameObject selectedIndicator = btnObj.transform.Find("SelectedIndicator").gameObject;
+            selectedIndicator.SetActive(false);
+            selectedIndicators.Add(selectedIndicator);
 
             btn.onClick.AddListener(() =>
             {
@@ -36,6 +42,12 @@ public class ConversationModeMenu : MonoBehaviour
                 {
                     Debug.LogWarning("AIChatbot reference not set on ConversationModeMenu. Assign it in the Inspector.");
                 }
+
+                foreach (GameObject indicator in selectedIndicators)
+                {
+                    indicator.SetActive(false);
+                }
+                selectedIndicator.SetActive(true);
             });
         }
     }
