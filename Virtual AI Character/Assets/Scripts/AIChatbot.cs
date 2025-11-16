@@ -22,7 +22,6 @@ public class AIChatbot : MonoBehaviour
             ApplySystemPrompt();
     }
 
-    // Load the system prompt from Resources using the current prompt_name and add it to history
     public void ApplySystemPrompt()
     {
         TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
@@ -82,22 +81,11 @@ public class AIChatbot : MonoBehaviour
     [SerializeField] private LLMCharacter aiCharacter;
     private bool isLlamaInitialized = false;
 
-    // Chat history: Shared for Gemini and Llama
     public List<ChatMessage> chatHistory = new List<ChatMessage>();
 
-    // Latest parsed emotions from the most recent model response (shared for Gemini and Llama)
     public Dictionary<string, float> currentEmotions = new Dictionary<string, float>();
 
-    // // Helper to read an emotion value safely
-    // public float GetEmotionValue(string name, float defaultValue = 0f)
-    // {
-    //     if (string.IsNullOrEmpty(name)) return defaultValue;
-    //     if (currentEmotions != null && currentEmotions.TryGetValue(name, out float v))
-    //         return v;
-    //     return defaultValue;
-    // }
-
-    // Classes for JSON serialization (unchanged)
+ 
     [System.Serializable]
     public class ChatMessage
     {
@@ -168,13 +156,18 @@ public class AIChatbot : MonoBehaviour
         if (string.IsNullOrWhiteSpace(raw))
             return;
 
-        // Attempt to locate a JSON object within the raw string (handles surrounding commentary)
         int first = raw.IndexOf('{');
         int last = raw.LastIndexOf('}');
         string candidate = raw;
         if (first >= 0 && last > first)
         {
             candidate = raw.Substring(first, last - first + 1);
+            Debug.Log("Raw Json: " + candidate);
+        }
+        else
+        {
+            Debug.LogWarning("No JSON object found in response.");
+            Debug.Log("first: " + first + ", last: " + last);
         }
 
         try
@@ -207,7 +200,6 @@ public class AIChatbot : MonoBehaviour
         }
     }
 
-    // Initialize Llama and sync initial chat history
     private void InitializeLlama()
     {
         if (aiCharacter == null)

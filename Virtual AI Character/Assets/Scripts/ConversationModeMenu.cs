@@ -9,7 +9,7 @@ public class ConversationModeMenu : MonoBehaviour
     public Button toggleMenuButton;
     public GameObject buttonPrefab;
     public Transform menuPanel;
-    public String[] conversationModes = { "Happy", "Caring" };
+    public String[] conversationModes = { "Default", "Happy", "Caring" };
     [SerializeField] private AIChatbot aiChatbot;
     private List<GameObject> selectedIndicators = new List<GameObject>();
 
@@ -19,7 +19,7 @@ public class ConversationModeMenu : MonoBehaviour
 
         foreach (String conversationMode in conversationModes)
         {
-            string mode = conversationMode; // capture for closure
+            string mode = conversationMode;
             GameObject btnObj = Instantiate(buttonPrefab, menuPanel);
             Button btn = btnObj.GetComponent<Button>();
             TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>();
