@@ -12,6 +12,11 @@ public class InteractionHandler : MonoBehaviour
     public AIChatbot aiChatbot;
 
     [Header("References")]
+    // processing indicator //
+    public GameObject processingIndicator;
+    // content tag //
+    public GameObject contentTag;
+    public TMP_Text contentTagText;
     // output //
     public GameObject outputPanel;
     public TMP_Text outputText;
@@ -36,6 +41,8 @@ public class InteractionHandler : MonoBehaviour
         inputPanel.SetActive(false);
         audioInputPanel.SetActive(false);
         outputPanel.SetActive(false);
+        contentTag.SetActive(false);
+        processingIndicator.SetActive(false);
 
         toggleTextInputButton.onClick.AddListener(ToggleTextInput);
         toggleAudioInputButton.onClick.AddListener(ToggleAudioInput);
@@ -103,10 +110,13 @@ public class InteractionHandler : MonoBehaviour
         audioInputPanel.SetActive(false);
         currentInputMode = InputMode.None;
         outputPanel.SetActive(false);
+        contentTag.SetActive(false);
     }
 
     void ShowTextInput()
     {
+        contentTagText.text = "User";
+        contentTag.SetActive(true);
         inputPanel.SetActive(true);
         inputField.interactable = true;
         audioInputPanel.SetActive(false);
@@ -117,6 +127,8 @@ public class InteractionHandler : MonoBehaviour
 
     void ShowAudioInput()
     {
+        contentTagText.text = "User";
+        contentTag.SetActive(true);
         audioInputPanel.SetActive(true);
         inputPanel.SetActive(false);
         outputPanel.SetActive(false);
@@ -129,7 +141,9 @@ public class InteractionHandler : MonoBehaviour
         if (currentInputMode != InputMode.Text)
             return;
 
-        inputField.interactable = false;
+        inputPanel.SetActive(false);
+        contentTag.SetActive(false);
+        processingIndicator.SetActive(true);
 
         StartCoroutine(aiChatbot.GetAIResponse(text, (aiResponse) =>
         {
@@ -137,7 +151,9 @@ public class InteractionHandler : MonoBehaviour
             {
                 speechAudioSource.clip = audioResponse;
                 speechAudioSource.Play();
-                inputPanel.SetActive(false);
+                processingIndicator.SetActive(false);
+                contentTagText.text = "AI";
+                contentTag.SetActive(true);
                 outputPanel.SetActive(true);
                 outputText.text = $"{aiResponse}";
                 currentInputMode = InputMode.None;
@@ -150,13 +166,17 @@ public class InteractionHandler : MonoBehaviour
         if (currentInputMode != InputMode.Audio)
             return;
 
+        contentTag.SetActive(false);
+
         StartCoroutine(aiChatbot.GetAIResponse(response, (aiResponse) =>
         {
             audioHandler.SpeakText(aiResponse, (audioResponse) =>
             {
                 speechAudioSource.clip = audioResponse;
                 speechAudioSource.Play();
-                audioInputPanel.SetActive(false);
+                processingIndicator.SetActive(false);
+                contentTagText.text = "AI";
+                contentTag.SetActive(true);
                 outputPanel.SetActive(true);
                 outputText.text = $"{aiResponse}";
                 currentInputMode = InputMode.None;
@@ -178,10 +198,13 @@ public class InteractionHandler : MonoBehaviour
         Microphone.End(microphoneDevice);
         isRecording = false;
 
-        audioStatusText.text = "Processing...";
+        audioInputPanel.SetActive(false);
+        contentTag.SetActive(false);
+        processingIndicator.SetActive(true);
+
         if (audioHandler == null)
         {
-            audioStatusText.text = "Cannot process audio";
+            processingIndicator.GetComponentInChildren<Text>().text = "Cannot process audio";
         }
         else
         {
