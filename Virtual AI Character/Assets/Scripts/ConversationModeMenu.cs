@@ -9,7 +9,7 @@ public class ConversationModeMenu : MonoBehaviour
     public Button toggleMenuButton;
     public GameObject buttonPrefab;
     public Transform menuPanel;
-    public String[] conversationModes = { "Default", "Happy", "Caring" };
+    public String[] conversationModes = { "Default", "Happy", "Caring", "Fun" };
     [SerializeField] private AIChatbot aiChatbot;
     private List<GameObject> selectedIndicators = new List<GameObject>();
 
@@ -31,11 +31,10 @@ public class ConversationModeMenu : MonoBehaviour
 
             btn.onClick.AddListener(() =>
             {
-                // Map conversation mode to a Resources prompt filename (adjust mapping as needed)
-                string promptResourceName = "system_prompt_" + mode.ToLower(); // expects Resources/<name>.txt
+                string promptResourceName = "system_prompt_" + mode.ToLower();
                 if (aiChatbot != null)
                 {
-                    aiChatbot.SetPromptName(promptResourceName, true);
+                    aiChatbot.SetPromptName(promptResourceName);
                     Debug.Log("Conversation mode changed to " + mode + ", applied prompt: " + promptResourceName);
                 }
                 else

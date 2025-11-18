@@ -2,29 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.IO;
 using Newtonsoft.Json;
 using LLMUnity;
 
 public class AIChatbot : MonoBehaviour
 {
-    // Gemini API settings
     public static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA";
     public static string model = "gemini-2.5-flash-lite";
     public string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     string prompt_name = "system_prompt_default";
 
-    public void SetPromptName(string newPromptName, bool applyImmediately = true)
+    public void SetPromptName(string newPromptName)
     {
         if (string.IsNullOrEmpty(newPromptName))
             return;
         prompt_name = newPromptName;
-        if (applyImmediately)
-            ApplySystemPrompt();
+        ApplySystemPrompt();
     }
 
     public void ApplySystemPrompt()
     {
-        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
+        TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
         string systemPrompt;
         if (promptAsset != null)
         {
@@ -76,12 +75,13 @@ public class AIChatbot : MonoBehaviour
         }
     }
 
-    // LLMUnity Llama settings
     [Header("Llama Fallback")]
     [SerializeField] private LLMCharacter aiCharacter;
     private bool isLlamaInitialized = false;
 
     public List<ChatMessage> chatHistory = new List<ChatMessage>();
+    // persistence filename (stored in Application.persistentDataPath)
+    private readonly string chatHistoryFileName = "chat_history.txt";
 
     public Dictionary<string, float> currentEmotions = new Dictionary<string, float>();
 
@@ -119,7 +119,6 @@ public class AIChatbot : MonoBehaviour
 
     void Start()
     {
-        // Check internet for Gemini
         if (Application.internetReachability == NetworkReachability.NotReachable)
         {
             Debug.LogWarning("No internet! Will use Llama fallback.");
@@ -128,26 +127,28 @@ public class AIChatbot : MonoBehaviour
         {
             Debug.Log("Internet connected!");
         }
-
-        // Load system prompt from Resources
-        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
-        string systemPrompt;
-        if (promptAsset != null)
+        // Attempt to load saved chat history from disk. If none exists, fall back to default prompt.
+        bool loaded = LoadChatHistoryFromFile();
+        if (!loaded)
         {
-            systemPrompt = promptAsset.text;
-            Debug.Log("System prompt loaded successfully");
-        }
-        else
-        {
-            systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
-            Debug.LogWarning("Prompt not found in Resources! Using default prompt.");
-        }
+            TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
+            string systemPrompt;
+            if (promptAsset != null)
+            {
+                systemPrompt = promptAsset.text;
+                Debug.Log("System prompt loaded successfully");
+            }
+            else
+            {
+                systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
+                Debug.LogWarning("Prompt not found in Resources! Using default prompt.");
+            }
 
-        AddMessage("model", systemPrompt);
+            AddMessage("model", systemPrompt);
+        }
     }
 
-    // Parse model output that may be either pure JSON or text containing a JSON object.
-    // Returns parsed text and a dictionary of emotion values (may be empty).
+    // parse json and return text + emotion dictionary
     private void ParseAIResponse(string raw, out string textOut, out Dictionary<string, float> emotions)
     {
         textOut = raw ?? "";
@@ -223,7 +224,6 @@ public class AIChatbot : MonoBehaviour
 
         aiCharacter.AddMessage(systemPrompt, "model");
 
-        // Sync existing chatHistory to Llama
         foreach (var msg in chatHistory)
         {
             aiCharacter.AddMessage(msg.parts[0].text, msg.role);
@@ -239,10 +239,53 @@ public class AIChatbot : MonoBehaviour
         message.parts.Add(new Part { text = text });
         chatHistory.Add(message);
 
-        // Sync with Llama history
         if (isLlamaInitialized && aiCharacter != null)
         {
             aiCharacter.AddMessage(text, role);
+        }
+        
+        SaveChatHistoryToFile();
+    }
+
+    private string GetChatHistoryPath()
+    {
+        return Path.Combine(Application.persistentDataPath, chatHistoryFileName);
+    }
+
+    private bool SaveChatHistoryToFile()
+    {
+        try
+        {
+            var path = GetChatHistoryPath();
+            var json = JsonConvert.SerializeObject(chatHistory, Formatting.Indented);
+            File.WriteAllText(path, json);
+            Debug.Log($"Saved chat history to {path}");
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"Failed saving chat history: {ex}");
+            return false;
+        }
+    }
+
+    private bool LoadChatHistoryFromFile()
+    {
+        try
+        {
+            var path = GetChatHistoryPath();
+            if (!File.Exists(path)) return false;
+            var json = File.ReadAllText(path);
+            var loaded = JsonConvert.DeserializeObject<List<ChatMessage>>(json);
+            if (loaded == null) return false;
+            chatHistory = loaded;
+            Debug.Log($"Loaded chat history from {path} ({chatHistory.Count} messages)");
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"Failed loading chat history: {ex}");
+            return false;
         }
     }
 
@@ -251,11 +294,9 @@ public class AIChatbot : MonoBehaviour
         string aiResponse = "";
         bool usedGemini = false;
 
-        // Add user message to history
         AddMessage("user", userInput);
         Debug.Log("User: " + userInput);
 
-        // Try Gemini
         if (Application.internetReachability != NetworkReachability.NotReachable)
         {
             var requestBody = new RequestBody { contents = chatHistory };
@@ -317,14 +358,12 @@ public class AIChatbot : MonoBehaviour
         string aiResponse = "";
         bool completed = false;
 
-        // Use LLMCharacter's Chat method
         aiCharacter.Chat(userText,
                         (reply) => { aiResponse += reply; },
                         () => { completed = true; });
 
         yield return new WaitUntil(() => completed);
 
-        // Parse the final Llama response for JSON text + emotion and return the cleaned text
         ParseAIResponse(aiResponse, out string llamaText, out Dictionary<string, float> llamaEmotions);
         currentEmotions = llamaEmotions ?? new Dictionary<string, float>();
         Debug.Log($"Llama parsed text: {llamaText}");
