@@ -15,7 +15,6 @@ public class InteractionHandler : MonoBehaviour
     // output //
     public GameObject outputPanel;
     public TMP_Text outputText;
-    public Button nextInputButton;
     // text input //
     public Button toggleTextInputButton;
     public GameObject inputPanel;
@@ -40,7 +39,6 @@ public class InteractionHandler : MonoBehaviour
 
         toggleTextInputButton.onClick.AddListener(ToggleTextInput);
         toggleAudioInputButton.onClick.AddListener(ToggleAudioInput);
-        nextInputButton.onClick.AddListener(PrepareForNextInput);
 
         inputField.onSubmit.AddListener(OnTextInputSubmitted);
 
@@ -164,12 +162,6 @@ public class InteractionHandler : MonoBehaviour
                 currentInputMode = InputMode.None;
             });
         }));
-    }
-
-    void PrepareForNextInput()
-    {
-        outputPanel.SetActive(false);
-        ShowTextInput();
     }
 
     void StartRecording()
