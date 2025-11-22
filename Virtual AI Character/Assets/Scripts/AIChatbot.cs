@@ -5,12 +5,14 @@ using UnityEngine.Networking;
 using System.IO;
 using Newtonsoft.Json;
 using LLMUnity;
+using TMPro;
 
 public class AIChatbot : MonoBehaviour
 {
-    public static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA";
-    public static string model = "gemini-2.5-flash-lite";
-    public string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
+    public GameObject processStatusText;
+    private static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA";
+    private static string model = "gemini-2.5-flash-lite";
+    private string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     string prompt_name = "system_prompt_default";
 
     public void SetPromptName(string newPromptName)
@@ -291,6 +293,8 @@ public class AIChatbot : MonoBehaviour
 
     public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
     {
+        processStatusText.GetComponent<TMP_Text>().text = "Processing...";
+
         string aiResponse = "";
         bool usedGemini = false;
 
@@ -317,6 +321,7 @@ public class AIChatbot : MonoBehaviour
                     ResponseBody response = JsonUtility.FromJson<ResponseBody>(responseJson);
                     if (response.candidates != null && response.candidates.Count > 0)
                     {
+                        processStatusText.GetComponent<TMP_Text>().text = "Received response from\nGemini (online)";
                         aiResponse = response.candidates[0].content.parts[0].text;
                         Debug.Log("Gemini AI (raw): " + aiResponse);
 
@@ -346,6 +351,7 @@ public class AIChatbot : MonoBehaviour
             if (!isLlamaInitialized) InitializeLlama();
             yield return GenerateLlamaResponse(userInput, (llamaResult) =>
             {
+                processStatusText.GetComponent<TMP_Text>().text = "Received response from\nLlama (offline)";
                 AddMessage("model", llamaResult);
                 onComplete?.Invoke(llamaResult);
             });

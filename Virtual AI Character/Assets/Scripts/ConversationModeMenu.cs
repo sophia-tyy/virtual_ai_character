@@ -10,6 +10,7 @@ public class ConversationModeMenu : MonoBehaviour
     public GameObject buttonPrefab;
     public Transform menuPanel;
     public String[] conversationModes = { "Default", "Happy", "Caring", "Fun" };
+    public GameObject conModeStatusText;
     [SerializeField] private AIChatbot aiChatbot;
     private List<GameObject> selectedIndicators = new List<GameObject>();
 
@@ -29,6 +30,7 @@ public class ConversationModeMenu : MonoBehaviour
             if (mode == "Default")
             {
                 selectedIndicator.SetActive(true);
+                conModeStatusText.GetComponent<TMP_Text>().text = mode;
             }
             else
             {
@@ -43,6 +45,7 @@ public class ConversationModeMenu : MonoBehaviour
                 {
                     aiChatbot.SetPromptName(promptResourceName);
                     Debug.Log("Conversation mode changed to " + mode + ", applied prompt: " + promptResourceName);
+                    conModeStatusText.GetComponent<TMP_Text>().text = mode;
                 }
                 else
                 {
