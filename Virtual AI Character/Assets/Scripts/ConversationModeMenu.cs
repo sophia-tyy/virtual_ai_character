@@ -26,7 +26,14 @@ public class ConversationModeMenu : MonoBehaviour
             btnText.text = mode;
 
             GameObject selectedIndicator = btnObj.transform.Find("SelectedIndicator").gameObject;
-            selectedIndicator.SetActive(false);
+            if (mode == "Default")
+            {
+                selectedIndicator.SetActive(true);
+            }
+            else
+            {
+                selectedIndicator.SetActive(false);
+            }
             selectedIndicators.Add(selectedIndicator);
 
             btn.onClick.AddListener(() =>
