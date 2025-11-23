@@ -18,6 +18,7 @@ public class InteractionHandler : MonoBehaviour
     // content tag //
     public GameObject contentTag;
     public TMP_Text contentTagText;
+    public Button closeButton;
     // output //
     public GameObject outputPanel;
     public TMP_Text outputText;
@@ -49,6 +50,9 @@ public class InteractionHandler : MonoBehaviour
         toggleAudioInputButton.onClick.AddListener(ToggleAudioInput);
 
         inputField.onSubmit.AddListener(OnTextInputSubmitted);
+
+        // close button setup //
+        closeButton.onClick.AddListener(HideAllInputs);
 
         // audio input setup //
         recordButton.onClick.AddListener(( ) => { });
