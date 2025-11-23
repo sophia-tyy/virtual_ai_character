@@ -8,11 +8,21 @@ public class BackgroundImageMenu : MonoBehaviour
     public Button toggleMenuButton;
     public GameObject buttonPrefab;
     public Transform menuPanel;
-    public Image backgroundImage;
+    private Image backgroundImage;
     private List<GameObject> selectedIndicators = new List<GameObject>();
 
     void Start()
     {
+        try
+        {
+            backgroundImage = CoreManager.instance.backgroundImage;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error getting backgroundcanvas: " + e.Message);
+            return;
+        }
+
         toggleMenuButton.onClick.AddListener(ToggleMenu);
 
         Object[] backgroundSprites = Resources.LoadAll("BackgroundImage", typeof(Sprite));

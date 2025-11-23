@@ -10,7 +10,7 @@ public class BackgroundMusicMenu : MonoBehaviour
     public Image volumeIcon;
     public GameObject buttonPrefab;
     public Transform menuPanel;
-    public AudioSource audioSource;
+    private AudioSource audioSource;
     private List<GameObject> selectedIndicators = new List<GameObject>();
     
     private Sprite volumeHighIcon;
@@ -20,6 +20,16 @@ public class BackgroundMusicMenu : MonoBehaviour
 
     void Start()
     {
+        try
+        {
+            audioSource = CoreManager.instance.backgroundMusic;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error getting backgroundaudiosource: " + e.Message);
+            return;
+        }
+
         toggleMenuButton.onClick.AddListener(ToggleMenu);
 
         Object[] musicClips = Resources.LoadAll("Music", typeof(AudioClip));
