@@ -6,6 +6,7 @@ using System.IO;
 using Newtonsoft.Json;
 using LLMUnity;
 using TMPro;
+using Unity.VisualScripting;
 
 public class AIChatbot : MonoBehaviour
 {
@@ -15,69 +16,7 @@ public class AIChatbot : MonoBehaviour
     private string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     string prompt_name = "system_prompt_default";
 
-    public void SetPromptName(string newPromptName)
-    {
-        if (string.IsNullOrEmpty(newPromptName))
-            return;
-        prompt_name = newPromptName;
-        ApplySystemPrompt();
-    }
-
-    public void ApplySystemPrompt()
-    {
-        TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
-        string systemPrompt;
-        if (promptAsset != null)
-        {
-            systemPrompt = promptAsset.text;
-            Debug.Log($"Applied system prompt '{prompt_name}'");
-        }
-        else
-        {
-            systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
-            Debug.LogWarning($"Prompt '{prompt_name}' not found in Resources when applying system prompt. Using default prompt.");
-        }
-
-        ReplaceOrAddSystemPrompt(systemPrompt);
-    }
-
-    private void ReplaceOrAddSystemPrompt(string systemPrompt)
-    {
-        if (string.IsNullOrEmpty(systemPrompt))
-            return;
-
-        bool replaced = false;
-        for (int i = 0; i < chatHistory.Count; i++)
-        {
-            var msg = chatHistory[i];
-            if (msg == null) continue;
-            var role = (msg.role ?? "").ToLowerInvariant();
-            if (role == "model" || role == "system")
-            {
-                if (msg.parts == null || msg.parts.Count == 0)
-                    msg.parts = new List<Part> { new Part { text = systemPrompt } };
-                else
-                    msg.parts[0].text = systemPrompt;
-
-                chatHistory[i] = msg;
-                replaced = true;
-
-                if (isLlamaInitialized && aiCharacter != null)
-                {
-                    aiCharacter.AddMessage(systemPrompt, msg.role);
-                }
-
-                break;
-            }
-        }
-
-        if (!replaced)
-        {
-            AddMessage("model", systemPrompt);
-        }
-    }
-
-    [Header("Llama Fallback")]
+    [Header("Llama")]
     [SerializeField] private LLMCharacter aiCharacter;
     private bool isLlamaInitialized = false;
 
@@ -119,122 +58,76 @@ public class AIChatbot : MonoBehaviour
         public ChatMessage content;
     }
 
-    void Start()
+    // prompt -----------------------------------------------------------------
+    public void SetPromptName(string newPromptName)
     {
-        if (Application.internetReachability == NetworkReachability.NotReachable)
-        {
-            Debug.LogWarning("No internet! Will use Llama fallback.");
-        }
-        else
-        {
-            Debug.Log("Internet connected!");
-        }
-        // Attempt to load saved chat history from disk. If none exists, fall back to default prompt.
-        bool loaded = LoadChatHistoryFromFile();
-        if (!loaded)
-        {
-            TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
-            string systemPrompt;
-            if (promptAsset != null)
-            {
-                systemPrompt = promptAsset.text;
-                Debug.Log("System prompt loaded successfully");
-            }
-            else
-            {
-                systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
-                Debug.LogWarning("Prompt not found in Resources! Using default prompt.");
-            }
-
-            AddMessage("model", systemPrompt);
-        }
+        if (string.IsNullOrEmpty(newPromptName))
+            return;
+        prompt_name = newPromptName;
+        ApplySystemPrompt();
     }
 
-    // parse json and return text + emotion dictionary
-    private void ParseAIResponse(string raw, out string textOut, out Dictionary<string, float> emotions)
+    public void ApplySystemPrompt(bool addonly=false)
     {
-        textOut = raw ?? "";
-        emotions = new Dictionary<string, float>();
-
-        if (string.IsNullOrWhiteSpace(raw))
-            return;
-
-        int first = raw.IndexOf('{');
-        int last = raw.LastIndexOf('}');
-        string candidate = raw;
-        if (first >= 0 && last > first)
-        {
-            candidate = raw.Substring(first, last - first + 1);
-            Debug.Log("Raw Json: " + candidate);
-        }
-        else
-        {
-            Debug.LogWarning("No JSON object found in response.");
-            Debug.Log("first: " + first + ", last: " + last);
-        }
-
-        try
-        {
-            var j = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(candidate);
-            if (j == null)
-                return;
-
-            var txt = j["text"]?.ToString();
-            if (j["text"] == null) Debug.LogWarning("ParseAIResponse: 'text' field missing in JSON.");
-            if (!string.IsNullOrEmpty(txt))
-                textOut = txt.Trim();
-
-            var emo = j["emotion"] as Newtonsoft.Json.Linq.JObject;
-            if (j["emotion"] == null) Debug.LogWarning("ParseAIResponse: 'emotion' field missing in JSON.");
-            if (emo != null)
-            {
-                foreach (var prop in emo.Properties())
-                {
-                    if (float.TryParse(prop.Value.ToString(), out float v))
-                    {
-                        emotions[prop.Name] = Mathf.Clamp01(v);
-                    }
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogWarning($"ParseAIResponse: failed to parse JSON, using raw text. Error: {ex.Message}");
-        }
-    }
-
-    private void InitializeLlama()
-    {
-        if (aiCharacter == null)
-        {
-            Debug.LogError("LLMCharacter not assigned! Drag AICharacter GameObject to Inspector.");
-            return;
-        }
-
-        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
+        TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
         string systemPrompt;
         if (promptAsset != null)
         {
             systemPrompt = promptAsset.text;
-            Debug.Log("System prompt loaded for Llama");
+            Debug.Log($"Applied system prompt '{prompt_name}'");
         }
         else
         {
             systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
-            Debug.LogWarning("SystemPrompt not found in Resources! Using default prompt for Llama.");
+            Debug.LogWarning($"Prompt '{prompt_name}' not found in Resources when applying system prompt. Using default prompt.");
         }
 
-        aiCharacter.AddMessage(systemPrompt, "model");
-
-        foreach (var msg in chatHistory)
-        {
-            aiCharacter.AddMessage(msg.parts[0].text, msg.role);
-        }
-
-        isLlamaInitialized = true;
-        Debug.Log("Llama initialized and chat history synced.");
+        ReplaceOrAddSystemPrompt(systemPrompt, addonly);
     }
 
+    private void ReplaceOrAddSystemPrompt(string systemPrompt, bool addonly)
+    {
+        if (string.IsNullOrEmpty(systemPrompt))
+            return;
+
+        if (addonly)
+        {
+            AddMessage("model", systemPrompt);
+            return;
+        }
+
+        bool replaced = false;
+        for (int i = 0; i < chatHistory.Count; i++)
+        {
+            var msg = chatHistory[i];
+            if (msg == null) continue;
+            var role = (msg.role ?? "").ToLowerInvariant();
+            if (role == "model" || role == "system")
+            {
+                if (msg.parts == null || msg.parts.Count == 0)
+                    msg.parts = new List<Part> { new Part { text = systemPrompt } };
+                else
+                    msg.parts[0].text = systemPrompt;
+
+                chatHistory[i] = msg;
+                replaced = true;
+
+                if (isLlamaInitialized && aiCharacter != null)
+                {
+                    aiCharacter.AddMessage(systemPrompt, msg.role);
+                }
+
+                break;
+            }
+        }
+
+        if (!replaced)
+        {
+            AddMessage("model", systemPrompt);
+        }
+    }
+
+    // add message to history ------------------------------------------------
     private void AddMessage(string role, string text)
     {
         var message = new ChatMessage { role = role };
@@ -291,7 +184,126 @@ public class AIChatbot : MonoBehaviour
         }
     }
 
-    public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
+    // start -----------------------------------------------------------------
+    void Start()
+    {
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            Debug.LogWarning("No internet! Will use Llama fallback.");
+        }
+        else
+        {
+            Debug.Log("Internet connected!");
+        }
+        bool loaded = LoadChatHistoryFromFile();
+        if (!loaded)
+        {
+            TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
+            string systemPrompt;
+            if (promptAsset != null)
+            {
+                systemPrompt = promptAsset.text;
+                Debug.Log("System prompt loaded successfully");
+            }
+            else
+            {
+                systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
+                Debug.LogWarning("Prompt not found in Resources! Using default prompt.");
+            }
+
+            AddMessage("model", systemPrompt);
+        }
+    }
+
+    // parse json and return text + emotion dictionary-----------------------------------------------------------
+    private void ParseAIResponse(string raw, out string textOut, out Dictionary<string, float> emotions)
+    {
+        textOut = raw ?? "";
+        emotions = new Dictionary<string, float>();
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return;
+
+        int first = raw.IndexOf('{');
+        int last = raw.LastIndexOf('}');
+        string candidate = raw;
+        if (first >= 0 && last > first)
+        {
+            candidate = raw.Substring(first, last - first + 1);
+            Debug.Log("Raw Json: " + candidate);
+        }
+        else
+        {
+            Debug.LogWarning("No JSON object found in response.");
+            Debug.Log("first: " + first + ", last: " + last);
+            ApplySystemPrompt(true);
+            Debug.Log("prompt reapplied.............");
+        }
+
+        try
+        {
+            var j = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(candidate);
+            if (j == null)
+                return;
+
+            var txt = j["text"]?.ToString();
+            if (j["text"] == null) Debug.LogWarning("ParseAIResponse: 'text' field missing in JSON.");
+            if (!string.IsNullOrEmpty(txt))
+                textOut = txt.Trim();
+
+            var emo = j["emotion"] as Newtonsoft.Json.Linq.JObject;
+            if (j["emotion"] == null) Debug.LogWarning("ParseAIResponse: 'emotion' field missing in JSON.");
+            if (emo != null)
+            {
+                foreach (var prop in emo.Properties())
+                {
+                    if (float.TryParse(prop.Value.ToString(), out float v))
+                    {
+                        emotions[prop.Name] = Mathf.Clamp01(v);
+                    }
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"ParseAIResponse: failed to parse JSON, using raw text. Error: {ex.Message}");
+        }
+    }
+
+    // models init and call ------------------------------------------------------------------------------
+    private void InitializeLlama()
+    {
+        if (aiCharacter == null)
+        {
+            Debug.LogError("LLMCharacter not assigned! Drag AICharacter GameObject to Inspector.");
+            return;
+        }
+
+        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
+        string systemPrompt;
+        if (promptAsset != null)
+        {
+            systemPrompt = promptAsset.text;
+            Debug.Log("System prompt loaded for Llama");
+        }
+        else
+        {
+            systemPrompt = "You are a helpful AI assistant. For every reply return a JSON object with two fields: 'text' (the message to send to the user) and 'emotion' (an object mapping emotion names to numeric values between 0 and 1). Example: {\"text\":\"Hello!\",\"emotion\":{\"happiness\":0.5}}. If you cannot produce valid JSON, still return text in the 'text' field.";
+            Debug.LogWarning("SystemPrompt not found in Resources! Using default prompt for Llama.");
+        }
+
+        aiCharacter.AddMessage(systemPrompt, "model");
+
+        foreach (var msg in chatHistory)
+        {
+            aiCharacter.AddMessage(msg.parts[0].text, msg.role);
+        }
+
+        isLlamaInitialized = true;
+        Debug.Log("Llama initialized and chat history synced.");
+    }
+
+        public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
     {
         string aiResponse = "";
         bool usedGemini = false;
