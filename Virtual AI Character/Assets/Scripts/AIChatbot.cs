@@ -293,8 +293,6 @@ public class AIChatbot : MonoBehaviour
 
     public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
     {
-        processStatusText.GetComponent<TMP_Text>().text = "Processing...";
-
         string aiResponse = "";
         bool usedGemini = false;
 

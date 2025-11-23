@@ -14,6 +14,7 @@ public class InteractionHandler : MonoBehaviour
     [Header("References")]
     // processing indicator //
     public GameObject processingIndicator;
+    public GameObject processingText;
     // content tag //
     public GameObject contentTag;
     public TMP_Text contentTagText;
@@ -143,6 +144,7 @@ public class InteractionHandler : MonoBehaviour
 
         inputPanel.SetActive(false);
         contentTag.SetActive(false);
+        processingText.GetComponent<TMP_Text>().text = "Processing...";
         processingIndicator.SetActive(true);
 
         StartCoroutine(aiChatbot.GetAIResponse(text, (aiResponse) =>
@@ -200,6 +202,7 @@ public class InteractionHandler : MonoBehaviour
 
         audioInputPanel.SetActive(false);
         contentTag.SetActive(false);
+        processingText.GetComponent<TMP_Text>().text = "Processing...";
         processingIndicator.SetActive(true);
 
         if (audioHandler == null)
