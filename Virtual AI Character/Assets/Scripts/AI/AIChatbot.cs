@@ -69,7 +69,7 @@ public class AIChatbot : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("API key is empty! Add Gemini API key to Resources/GeminiAPIkey.txt");
+            Debug.LogWarning("API key is empty... Add Gemini API key to Resources/GeminiAPIkey.txt");
         }
     }
     // prompt -----------------------------------------------------------------
@@ -203,7 +203,7 @@ public class AIChatbot : MonoBehaviour
     {
         if (Application.internetReachability == NetworkReachability.NotReachable)
         {
-            Debug.LogWarning("No internet! Will use Llama fallback.");
+            Debug.LogWarning("No internet... Will use Llama fallback.");
         }
         else
         {
@@ -289,7 +289,7 @@ public class AIChatbot : MonoBehaviour
     {
         if (aiCharacter == null)
         {
-            Debug.LogError("LLMCharacter not assigned! Drag AICharacter GameObject to Inspector.");
+            Debug.LogError("LLMCharacter not assigned... Drag AICharacter GameObject to Inspector.");
             return;
         }
 
@@ -347,11 +347,11 @@ public class AIChatbot : MonoBehaviour
                     {
                         processStatusText.GetComponent<TMP_Text>().text = "Received response from\nGemini (online)";
                         aiResponse = response.candidates[0].content.parts[0].text;
-                        Debug.Log("Gemini AI (raw): " + aiResponse);
+                        Debug.Log("Gemini(raw): " + aiResponse);
 
                         ParseAIResponse(aiResponse, out string parsedText, out Dictionary<string, float> emotions);
                         currentEmotions = emotions ?? new Dictionary<string, float>();
-                        Debug.Log($"Gemini parsed text: {parsedText}");
+                        Debug.Log($"Gemini(parsed): {parsedText}");
                         if (emotions.Count > 0)
                         {
                             foreach (var kv in emotions)
@@ -375,7 +375,7 @@ public class AIChatbot : MonoBehaviour
             if (!isLlamaInitialized) InitializeLlama();
             yield return GenerateLlamaResponse(userInput, (llamaResult) =>
             {
-                processStatusText.GetComponent<TMP_Text>().text = "Received response from\nLlama (offline)";
+                processStatusText.GetComponent<TMP_Text>().text = "Received response from\nLlama";
                 AddMessage("model", llamaResult);
                 onComplete?.Invoke(llamaResult);
             });
@@ -396,7 +396,7 @@ public class AIChatbot : MonoBehaviour
 
         ParseAIResponse(aiResponse, out string llamaText, out Dictionary<string, float> llamaEmotions);
         currentEmotions = llamaEmotions ?? new Dictionary<string, float>();
-        Debug.Log($"Llama parsed text: {llamaText}");
+        Debug.Log($"Llama(parsed): {llamaText}");
         if (llamaEmotions.Count > 0)
         {
             foreach (var kv in llamaEmotions)
