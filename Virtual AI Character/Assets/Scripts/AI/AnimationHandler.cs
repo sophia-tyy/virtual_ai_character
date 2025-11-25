@@ -9,7 +9,6 @@ public class EmotionAnimatorLink : MonoBehaviour
 
     [Header("=== Settings ===")]
     [Range(0f, 1f)] public float threshold = 0.3f;
-    public bool triggerOnRiseOnly = true;
     private Animator anim;
     private readonly Dictionary<string, float> prev = new();
     private readonly Dictionary<string, string> map = new()
