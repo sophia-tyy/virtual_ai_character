@@ -22,10 +22,9 @@ public class EmotionAnimatorLink : MonoBehaviour
         { "curiuos",   "curious" },
         { "disgusted", "nonono" }
     };
-
     private string lastStrongestEmotion = null;
     private float lastStrongestValue = float.NaN;
-    public float stabilityEpsilon = 0.01f;
+    public float stabilityEpsilon = 0.1f;
     private CubismFadeController fadeCtrl;
 
     private void Awake()

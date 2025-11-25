@@ -11,7 +11,7 @@ using Unity.VisualScripting;
 public class AIChatbot : MonoBehaviour
 {
     public GameObject processStatusText;
-    private static string apiKey = "AIzaSyBHy9uR1e21KPrzE7zLrMLWTSlVbu3fVbA";
+    private static string apiKey;
     private static string model = "gemini-2.5-flash-lite";
     private string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     string prompt_name = "system_prompt_default";
@@ -58,6 +58,20 @@ public class AIChatbot : MonoBehaviour
         public ChatMessage content;
     }
 
+    // api key -----------------------------------------------------------------
+    void Awake()
+    {
+        TextAsset apiKeyAsset = Resources.Load<TextAsset>("GeminiAPIkey");
+        if (apiKeyAsset != null)
+        {
+            apiKey = apiKeyAsset.text.Trim();
+            Debug.Log("API key loaded successfully");
+        }
+        else
+        {
+            Debug.LogWarning("API key is empty! Add Gemini API key to Resources/GeminiAPIkey.txt");
+        }
+    }
     // prompt -----------------------------------------------------------------
     public void SetPromptName(string newPromptName)
     {
@@ -279,7 +293,7 @@ public class AIChatbot : MonoBehaviour
             return;
         }
 
-        TextAsset promptAsset = Resources.Load<TextAsset>(prompt_name);
+        TextAsset promptAsset = Resources.Load<TextAsset>($"prompt/{prompt_name}");
         string systemPrompt;
         if (promptAsset != null)
         {
@@ -303,7 +317,7 @@ public class AIChatbot : MonoBehaviour
         Debug.Log("Llama initialized and chat history synced.");
     }
 
-        public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
+    public IEnumerator GetAIResponse(string userInput, System.Action<string> onComplete)
     {
         string aiResponse = "";
         bool usedGemini = false;
