@@ -21,7 +21,6 @@ public class AIChatbot : MonoBehaviour
     private bool isLlamaInitialized = false;
 
     public List<ChatMessage> chatHistory = new List<ChatMessage>();
-    // persistence filename (stored in Application.persistentDataPath)
     private readonly string chatHistoryFileName = "chat_history.txt";
 
     public Dictionary<string, float> currentEmotions = new Dictionary<string, float>();
@@ -56,6 +55,19 @@ public class AIChatbot : MonoBehaviour
     public class Candidate
     {
         public ChatMessage content;
+    }
+
+    [System.Serializable]
+    public class GeminiResponse
+    {
+        public List<GeminiCandidate> candidates;
+    }
+
+    [System.Serializable]
+    public class GeminiCandidate
+    {
+        public ChatMessage content;
+        public string finishReason;
     }
 
     // api key -----------------------------------------------------------------
@@ -106,7 +118,7 @@ public class AIChatbot : MonoBehaviour
 
         if (addonly)
         {
-            AddMessage("model", systemPrompt);
+            AddMessage("user", systemPrompt);
             return;
         }
 
@@ -137,7 +149,7 @@ public class AIChatbot : MonoBehaviour
 
         if (!replaced)
         {
-            AddMessage("model", systemPrompt);
+            AddMessage("user", systemPrompt);
         }
     }
 
@@ -225,7 +237,7 @@ public class AIChatbot : MonoBehaviour
                 Debug.LogWarning("Prompt not found in Resources! Using default prompt.");
             }
 
-            AddMessage("model", systemPrompt);
+            AddMessage("user", systemPrompt);
         }
     }
 
@@ -250,7 +262,7 @@ public class AIChatbot : MonoBehaviour
         {
             Debug.LogWarning("No JSON object found in response.");
             Debug.Log("first: " + first + ", last: " + last);
-            ApplySystemPrompt(true);
+            // ApplySystemPrompt(true);
             Debug.Log("prompt reapplied.............");
         }
 
@@ -306,7 +318,7 @@ public class AIChatbot : MonoBehaviour
             Debug.LogWarning("SystemPrompt not found in Resources! Using default prompt for Llama.");
         }
 
-        aiCharacter.AddMessage(systemPrompt, "model");
+        aiCharacter.AddMessage(systemPrompt, "user");
 
         foreach (var msg in chatHistory)
         {
@@ -342,7 +354,8 @@ public class AIChatbot : MonoBehaviour
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     string responseJson = request.downloadHandler.text;
-                    ResponseBody response = JsonUtility.FromJson<ResponseBody>(responseJson);
+                    Debug.Log("--- FULL RAW GEMINI RESPONSE ---\n" + responseJson);
+                    var response = JsonConvert.DeserializeObject<GeminiResponse>(responseJson);
                     if (response.candidates != null && response.candidates.Count > 0)
                     {
                         processStatusText.GetComponent<TMP_Text>().text = "Received response from\nGemini (online)";
@@ -375,7 +388,7 @@ public class AIChatbot : MonoBehaviour
             if (!isLlamaInitialized) InitializeLlama();
             yield return GenerateLlamaResponse(userInput, (llamaResult) =>
             {
-                processStatusText.GetComponent<TMP_Text>().text = "Received response from\nLlama";
+                processStatusText.GetComponent<TMP_Text>().text = "Received response from\nLlama (offline)";
                 AddMessage("model", llamaResult);
                 onComplete?.Invoke(llamaResult);
             });

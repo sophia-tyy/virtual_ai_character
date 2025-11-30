@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Live2D.Cubism.Framework.MotionFade;
 using UnityEngine;
+using System.IO;
 
 [RequireComponent(typeof(Animator))]
 public class EmotionAnimatorLink : MonoBehaviour
@@ -25,6 +26,8 @@ public class EmotionAnimatorLink : MonoBehaviour
     private float lastStrongestValue = float.NaN;
     public float stabilityEpsilon = 0.1f;
     private CubismFadeController fadeCtrl;
+    private int lastLineCount = -1;
+    private readonly string chatHistoryFileName = "chat_history.txt";
 
     private void Awake()
     {
@@ -51,32 +54,34 @@ public class EmotionAnimatorLink : MonoBehaviour
     {
         if (emotionSource == null) return;
 
-        if (EmotionsChanged())
+        int currentLineCount = GetChatHistoryLineCount();
+        if (currentLineCount <= lastLineCount) return;
+        lastLineCount = currentLineCount;
+
+        Debug.Log("Emotions changed, previous emotions: ......");
+        foreach (var kvp in prev)
         {
-            CheckEmotionTriggers();
+            if (kvp.Key == null) continue;
+            Debug.Log($"------{kvp.Key}: {kvp.Value}------");
         }
+        CheckEmotionTriggers();
+        
     }
 
-    private bool EmotionsChanged()
+    private int GetChatHistoryLineCount()
     {
-        if (emotionSource.currentEmotions.Count != prev.Count)
-            return true;
+        string path = Path.Combine(Application.persistentDataPath, chatHistoryFileName);
+        if (!File.Exists(path)) return 0;
 
-        foreach (var kv in emotionSource.currentEmotions)
+        try
         {
-            if (kv.Key == null) continue;
-            string keyLower = kv.Key.ToLowerInvariant();
-
-            if (!prev.TryGetValue(keyLower, out float prevVal))
-                return true;
-
-            if (!Mathf.Approximately(kv.Value, prevVal))
-                return true;
+            return File.ReadAllLines(path).Length;
         }
-
-        return false;
+        catch
+        {
+            return lastLineCount;
+        }
     }
-    
     private void CacheCurrentEmotions()
     {
         prev.Clear();
@@ -131,11 +136,11 @@ public class EmotionAnimatorLink : MonoBehaviour
 
         bool hasPrev = prev.TryGetValue(bestLower, out float prevVal);
 
-        if (!hasPrev)
-        {
-            CacheCurrentEmotions();
-            return;
-        }
+        // if (!hasPrev)
+        // {
+        //     CacheCurrentEmotions();
+        //     return;
+        // }
 
         bool stable = Mathf.Abs(bestVal - prevVal) <= stabilityEpsilon;
         bool isSameEmotion = lastStrongestEmotion == bestLower;
