@@ -12,4 +12,13 @@ public class MainController : MonoBehaviour
             .WithOverlay()
             .Perform();
     }
+
+    public void OpenAffectionSystem()
+    {
+        SceneController.instance
+            .NewTransition()
+            .Load(SceneDatabase.Slots.AffectionSystem, SceneDatabase.Scenes.AffectionSystemScene)
+            .WithOverlay()
+            .Perform();
+    }
 }

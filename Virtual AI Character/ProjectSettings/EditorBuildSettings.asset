@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ChatHistory.unity
     guid: 25cc3e522d170d04ab8c5b5c55e4cf57
+  - enabled: 1
+    path: Assets/Scenes/AffectionSystem.unity
+    guid: 5ff66e375f8e5734290e2cd979be8747
   m_configObjects: {}

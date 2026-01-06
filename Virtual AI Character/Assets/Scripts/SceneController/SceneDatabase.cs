@@ -7,6 +7,7 @@ public static class SceneDatabase
         public const string Start = "Start";
         public const string Main = "Main";
         public const string ChatHistory = "ChatHistory";
+        public const string AffectionSystem = "AffectionSystem";
     }
 
     public class Scenes
@@ -14,5 +15,6 @@ public static class SceneDatabase
         public const string StartScene = "Start";
         public const string MainScene = "Main";
         public const string ChatHistoryScene = "ChatHistory";
+        public const string AffectionSystemScene = "AffectionSystem";
     }
 }

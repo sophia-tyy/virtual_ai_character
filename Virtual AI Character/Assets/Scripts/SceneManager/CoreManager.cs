@@ -27,7 +27,8 @@ public class CoreManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == SceneDatabase.Scenes.ChatHistoryScene) return;
+        if (scene.name == SceneDatabase.Scenes.ChatHistoryScene
+            || scene.name == SceneDatabase.Scenes.AffectionSystemScene) return;
 
         Camera loadedSceneCamera = null;
 
