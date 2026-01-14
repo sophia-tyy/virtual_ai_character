@@ -8,22 +8,28 @@ public class MissionMenu : MonoBehaviour
 {
     public GameObject checklistPrefab;
     public Transform menuPanel;
-    public String[] missions = { "Chat", "Deep Talk" };
+    private Sprite missionIncompleteIcon;
+    private Sprite missionCompleteIcon;
 
-    void Start()
+    void OnEnable()
     {
-        foreach (String mission in missions)
+        List<AffectionData.TaskProgress> dailyTasks = AffectionDataManager.Instance.GetDailyTasks();
+        missionCompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_complete");
+        missionIncompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_incomplete");
+
+        foreach (var task in dailyTasks)
         {
             GameObject textObj = Instantiate(checklistPrefab, menuPanel);
 
             TMP_Text missionText = textObj.GetComponentInChildren<TMP_Text>();
-            missionText.text = mission;
+            missionText.text = task.taskName;
 
             GameObject missionIndicatorObj = textObj.transform.Find("finished_indicator").gameObject;
 
-            bool isFinished = true; // Placeholder for actual mission completion check
-            if (isFinished) missionIndicatorObj.SetActive(true);
-            else missionIndicatorObj.SetActive(false);
+            bool isFinished = task.completed;
+            if (isFinished) missionIndicatorObj.GetComponent<Image>().sprite = missionCompleteIcon;
+            else missionIndicatorObj.GetComponent<Image>().sprite = missionIncompleteIcon;
+            missionIndicatorObj.SetActive(true);
         }
     }
 }

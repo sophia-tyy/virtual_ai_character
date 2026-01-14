@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class MainController : MonoBehaviour
 {
+
+    void Start()
+    {
+        AffectionDataManager.Instance.CheckStreakandResetTask();
+        AffectionDataManager.Instance.FinishTask("Log In to the App");
+    }
+
     public void OpenChatHistory()
     {
         SceneController.instance
