@@ -8,14 +8,14 @@ public class MissionMenu : MonoBehaviour
 {
     public GameObject checklistPrefab;
     public Transform menuPanel;
-    private Sprite missionIncompleteIcon;
+    private Sprite missionToDoIcon;
     private Sprite missionCompleteIcon;
 
     void OnEnable()
     {
         List<AffectionData.TaskProgress> dailyTasks = AffectionDataManager.Instance.GetDailyTasks();
         missionCompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_complete");
-        missionIncompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_incomplete");
+        missionToDoIcon = Resources.Load<Sprite>("MissionIcon/mission_todo");
 
         foreach (var task in dailyTasks)
         {
@@ -28,7 +28,7 @@ public class MissionMenu : MonoBehaviour
 
             bool isFinished = task.completed;
             if (isFinished) missionIndicatorObj.GetComponent<Image>().sprite = missionCompleteIcon;
-            else missionIndicatorObj.GetComponent<Image>().sprite = missionIncompleteIcon;
+            else missionIndicatorObj.GetComponent<Image>().sprite = missionToDoIcon;
             missionIndicatorObj.SetActive(true);
         }
     }

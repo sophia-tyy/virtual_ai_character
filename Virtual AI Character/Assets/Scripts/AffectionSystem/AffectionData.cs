@@ -8,7 +8,7 @@ public class AffectionData {
     public int streak = 0;
     public int longestStreak = 0;
     public string lastInteractionDate = "";
-    public List<int> weeklyStreakHistory = new List<int>();
+    public List<int> weeklyStreakHistory = new List<int>{-1, -1, -1, -1, -1, -1, -1};
     [SerializeField] public List<TaskProgress> dailyTasks = new List<TaskProgress>();
     
     [System.Serializable]

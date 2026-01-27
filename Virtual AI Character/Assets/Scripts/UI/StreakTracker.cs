@@ -8,6 +8,8 @@ public class StreakTracker : MonoBehaviour
 {
     public GameObject dayIndicatorPrefab;
     public Transform menuPanel;
+    public TMP_Text currentStreakText;
+    public TMP_Text longestStreakText;
     private Sprite missionIncompleteIcon;
     private Sprite missionCompleteIcon;
     private Sprite missionToDoIcon;
@@ -17,8 +19,11 @@ public class StreakTracker : MonoBehaviour
     {
         missionCompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_complete");
         missionIncompleteIcon = Resources.Load<Sprite>("MissionIcon/mission_incomplete");
-        // missionToDoIcon = Resources.Load<Sprite>("MissionIcon/mission_todo");
+        missionToDoIcon = Resources.Load<Sprite>("MissionIcon/mission_todo");
         List<int> weeklyStreakHistory = AffectionDataManager.Instance.GetWeeklyStreakHistory();
+
+        currentStreakText.text = AffectionDataManager.Instance.GetStreak().ToString() + " Days";
+        longestStreakText.text = AffectionDataManager.Instance.GetLongestStreak().ToString() + " Days";
 
         for (int i = 0; i < 7; i++)
         {
@@ -30,7 +35,7 @@ public class StreakTracker : MonoBehaviour
             GameObject dayIndicatorObj = dayObj.transform.Find("icon").gameObject;
             if (weeklyStreakHistory[i] == 1) dayIndicatorObj.GetComponent<Image>().sprite = missionCompleteIcon;
             else if (weeklyStreakHistory[i] == 0) dayIndicatorObj.GetComponent<Image>().sprite = missionIncompleteIcon;
-            // else dayIndicatorObj.GetComponent<Image>().sprite = missionToDoIcon;
+            else dayIndicatorObj.GetComponent<Image>().sprite = missionToDoIcon;
         }
     }
 }

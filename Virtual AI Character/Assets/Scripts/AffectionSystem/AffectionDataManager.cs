@@ -46,12 +46,12 @@ public class AffectionDataManager : MonoBehaviour {
     private void UpdateLevel() {
         int[] thresholds = {0, 100, 500, 1000, 2000};
         for (int i = thresholds.Length; i > 0; i--) {
-            if (data.xp >= thresholds[i-1]) {
+            if (data.xp >= thresholds[i - 1]) {
                 data.level = i;
                 return;
             }
         }
-        data.level = 0;
+        data.level = 1;
     }
 
     public void CheckStreakandResetTask() {
@@ -61,9 +61,17 @@ public class AffectionDataManager : MonoBehaviour {
         
         if (today != lastInteractionDate) {
             foreach (var task in data.dailyTasks) task.completed = false;
+
+            if (today.DayOfWeek == DayOfWeek.Monday) data.weeklyStreakHistory = new List<int>{-1, -1, -1, -1, -1, -1, -1};
+            int dayIndex = ((int)today.DayOfWeek - 1 + 7) % 7;
+            for (int i = 0; i < dayIndex; i++){
+                if (data.weeklyStreakHistory[i] == -1) data.weeklyStreakHistory[i] = 0;
+            }
+            data.weeklyStreakHistory[dayIndex] = 1;
             
             if (today == lastInteractionDate.AddDays(1).Date) data.streak++;
             else data.streak = 1;
+            if (data.streak > data.longestStreak) data.longestStreak = data.streak;
         }
         data.lastInteractionDate = todayStr;
     }
@@ -85,6 +93,7 @@ public class AffectionDataManager : MonoBehaviour {
     public int GetXP() => data.xp;
     public int GetLevel() => data.level;
     public int GetStreak() => data.streak;
+    public int GetLongestStreak() => data.longestStreak;
     public List<AffectionData.TaskProgress> GetDailyTasks() => data.dailyTasks;
     public List<int> GetWeeklyStreakHistory() => data.weeklyStreakHistory;
 }

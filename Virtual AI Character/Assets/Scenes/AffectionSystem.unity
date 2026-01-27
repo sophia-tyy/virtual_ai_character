@@ -2187,6 +2187,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dayIndicatorPrefab: {fileID: 3617187827522735441, guid: 566bf1737d4b8c84d81d979acd32ed60, type: 3}
   menuPanel: {fileID: 155136557}
+  currentStreakText: {fileID: 8136472}
+  longestStreakText: {fileID: 303951508}
 --- !u!1 &1499279786
 GameObject:
   m_ObjectHideFlags: 0
