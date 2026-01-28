@@ -44,14 +44,14 @@ public class AffectionDataManager : MonoBehaviour {
     }
 
     private void UpdateLevel() {
-        int[] thresholds = {0, 100, 500, 1000, 2000};
-        for (int i = thresholds.Length; i > 0; i--) {
-            if (data.xp >= thresholds[i - 1]) {
+        int[] thresholds = AffectionSystemConstants.AffectionLevelThresholds;
+        for (int i = thresholds.Length - 1; i >= 0; i--) {
+            if (data.xp >= thresholds[i]) {
                 data.level = i;
                 return;
             }
         }
-        data.level = 1;
+        data.level = 0;
     }
 
     public void CheckStreakandResetTask() {

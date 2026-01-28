@@ -2125,6 +2125,7 @@ GameObject:
   - component: {fileID: 1427545653}
   - component: {fileID: 1427545654}
   - component: {fileID: 1427545655}
+  - component: {fileID: 1427545656}
   m_Layer: 0
   m_Name: AffectionSystemManager
   m_TagString: Untagged
@@ -2189,6 +2190,23 @@ MonoBehaviour:
   menuPanel: {fileID: 155136557}
   currentStreakText: {fileID: 8136472}
   longestStreakText: {fileID: 303951508}
+--- !u!114 &1427545656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427545650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bafe92d3bfe45347b1f3e62c48fd475, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelNameText: {fileID: 139782038}
+  levelNoText: {fileID: 465228473}
+  levelXpText: {fileID: 217227020}
+  progressBarBackground: {fileID: 86362851}
+  progressBarFill: {fileID: 2047586022}
 --- !u!1 &1499279786
 GameObject:
   m_ObjectHideFlags: 0
