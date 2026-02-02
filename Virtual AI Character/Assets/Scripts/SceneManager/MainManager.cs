@@ -8,7 +8,7 @@ public class MainController : MonoBehaviour
     void Start()
     {
         AffectionDataManager.Instance.CheckStreakandResetTask();
-        AffectionDataManager.Instance.FinishTask("Log In to the App");
+        AffectionDataManager.Instance.FinishTask("Open the App");
     }
 
     public void OpenChatHistory()
