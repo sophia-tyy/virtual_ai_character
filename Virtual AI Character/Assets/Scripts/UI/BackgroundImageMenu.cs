@@ -10,6 +10,7 @@ public class BackgroundImageMenu : MonoBehaviour
     public Transform menuPanel;
     private Image backgroundImage;
     private List<GameObject> selectedIndicators = new List<GameObject>();
+    private GameObject levelReward;
 
     void Start()
     {
@@ -55,11 +56,19 @@ public class BackgroundImageMenu : MonoBehaviour
                 }
                 selectedIndicator.SetActive(true);
             });
+
+            if (btnText.text == "School") levelReward = btnObj;
         }
+    }
+
+    void OnEnable() {
+        if (AffectionDataManager.Instance.GetLevel() >= 2) levelReward.gameObject.SetActive(true);
+        else levelReward.gameObject.SetActive(false);
     }
 
     void ToggleMenu()
     {
+        OnEnable();
         menuPanel.gameObject.SetActive(!menuPanel.gameObject.activeSelf);
     }
 }
