@@ -18,6 +18,8 @@ public class BackgroundMusicMenu : MonoBehaviour
     private Sprite volumeLowIcon;
     private Sprite volumeMuteIcon;
 
+    private GameObject levelReward;
+
     void Start()
     {
         try
@@ -64,6 +66,8 @@ public class BackgroundMusicMenu : MonoBehaviour
                 }
                 selectedIndicator.SetActive(true);
             });
+
+            if (btnText.text == "Fresh Focus") levelReward = btnObj;
         }
 
         volumeHighIcon = Resources.Load<Sprite>("VolumeIcon/volume_high");
@@ -86,8 +90,14 @@ public class BackgroundMusicMenu : MonoBehaviour
         
     }
 
+    void OnEnable() {
+        if (AffectionDataManager.Instance.GetLevel() >= 1) levelReward.gameObject.SetActive(true);
+        else levelReward.gameObject.SetActive(false);
+    }
+
     void ToggleMenu()
     {
+        OnEnable();
         menuPanel.gameObject.SetActive(!menuPanel.gameObject.activeSelf);
     }
 }
