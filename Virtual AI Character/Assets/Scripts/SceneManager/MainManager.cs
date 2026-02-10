@@ -28,4 +28,13 @@ public class MainController : MonoBehaviour
             .WithOverlay()
             .Perform();
     }
+
+    public void OpenGame()
+    {
+        SceneController.instance
+            .NewTransition()
+            .Load(SceneDatabase.Slots.Game, SceneDatabase.Scenes.GameScene)
+            .WithOverlay()
+            .Perform();
+    }
 }
