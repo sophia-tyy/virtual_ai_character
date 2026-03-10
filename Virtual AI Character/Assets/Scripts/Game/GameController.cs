@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class GameController : MonoBehaviour
 {
@@ -20,6 +21,8 @@ public class GameController : MonoBehaviour
 
     public TMP_Text highestScoreText;
     public TMP_Text currentScoreText;
+
+    public UnityEvent onGameEnd;
 
     void Start()
     {
@@ -77,5 +80,6 @@ public class GameController : MonoBehaviour
 
         gamePanel.SetActive(false);
         startButton.SetActive(true);
+        onGameEnd.Invoke();
     }
 }

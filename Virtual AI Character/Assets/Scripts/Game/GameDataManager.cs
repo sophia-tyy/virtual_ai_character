@@ -1,14 +1,15 @@
 
 using UnityEngine;
 using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System;
+using UnityEngine.Events;
 
 public class GameDataManager : MonoBehaviour {
     public static GameDataManager Instance;
     private GameData data;
     private string savePath;
+
+    public UnityEvent onHighestScoreUpdated;
 
     void Awake() {
         if (Instance == null) {
@@ -53,6 +54,9 @@ public class GameDataManager : MonoBehaviour {
 
     private void UpdateHighestScore() {
         data.highestScore = Math.Max(data.highestScore, data.currentScore);
+        if (data.currentScore == data.highestScore) {
+            onHighestScoreUpdated.Invoke();
+        }
     }
 
     public int GetHighestScore() => data.highestScore;
