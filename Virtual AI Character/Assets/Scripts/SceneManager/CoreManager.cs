@@ -15,6 +15,7 @@ public class CoreManager : MonoBehaviour
         else Destroy(gameObject);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
     void Start()
@@ -27,10 +28,6 @@ public class CoreManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == SceneDatabase.Scenes.ChatHistoryScene
-            || scene.name == SceneDatabase.Scenes.AffectionSystemScene
-            || scene.name == SceneDatabase.Scenes.GameScene) return;
-
         Camera loadedSceneCamera = null;
 
         GameObject setupObj = null;
@@ -54,5 +51,41 @@ public class CoreManager : MonoBehaviour
         }
 
         Debug.LogWarning("No setup object or camera found in the loaded scene.");
+    }
+
+    private void OnSceneUnloaded(Scene scene)
+    {
+        Scene mainScene = SceneManager.GetSceneByName("Main");
+        if (!mainScene.isLoaded) return;
+
+        Camera MainSceneCamera = null;
+
+        GameObject setupObj = null;
+        foreach (GameObject rootObj in mainScene.GetRootGameObjects())
+        {
+            if (rootObj.name == "--- Setup ---")
+            {
+                setupObj = rootObj;
+                break;
+            }
+            MainSceneCamera = setupObj.GetComponentInChildren<Camera>();
+            if (MainSceneCamera != null)
+            {
+                backgroundCanvas.worldCamera = MainSceneCamera;
+                return;
+            }
+        }
+
+        if (setupObj != null)
+        {
+            MainSceneCamera = setupObj.GetComponentInChildren<Camera>();
+            if (MainSceneCamera != null)
+            {
+                backgroundCanvas.worldCamera = MainSceneCamera;
+                return;
+            }
+        }
+
+        Debug.LogWarning("No setup object or camera found in scene Main.");
     }
 }
