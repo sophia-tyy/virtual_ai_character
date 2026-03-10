@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -18,6 +17,23 @@ public class GameController : MonoBehaviour
 
     public GameObject gamePanel;
     public GameObject startButton;
+
+    public TMP_Text highestScoreText;
+    public TMP_Text currentScoreText;
+
+    void Start()
+    {
+        UpdateDisplayScores();
+    }
+
+    public void UpdateDisplayScores()
+    {
+        int HighestScore = GameDataManager.Instance.GetHighestScore();
+        int CurrentScore = GameDataManager.Instance.GetCurrentScore();
+
+        highestScoreText.text = HighestScore.ToString();
+        currentScoreText.text = CurrentScore.ToString();
+    }
 
     public void StartGame()
     {

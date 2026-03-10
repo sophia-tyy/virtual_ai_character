@@ -1955,6 +1955,8 @@ MonoBehaviour:
   borderBottom: {fileID: 257298595}
   gamePanel: {fileID: 1085669210}
   startButton: {fileID: 1601574277}
+  highestScoreText: {fileID: 303951508}
+  currentScoreText: {fileID: 8136472}
 --- !u!1 &1333196720
 GameObject:
   m_ObjectHideFlags: 0
