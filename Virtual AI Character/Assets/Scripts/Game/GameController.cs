@@ -80,6 +80,8 @@ public class GameController : MonoBehaviour
 
         gamePanel.SetActive(false);
         startButton.SetActive(true);
+
+        AffectionDataManager.Instance.FinishTask("Play Mini Game Once");
         onGameEnd.Invoke();
     }
 }
