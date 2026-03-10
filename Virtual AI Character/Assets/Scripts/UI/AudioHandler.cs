@@ -2,23 +2,25 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using UnityEngine;
-using System.Threading.Tasks;
+using UnityEngine.Networking;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
+using System.Threading.Tasks;
 
 public class AudioHandler : MonoBehaviour
 {
     public delegate void SpeechToTextCallback(string result);
     public delegate void TextToSpeechCallback(AudioClip result);
 
-    // Azure setup //
-    private string subscriptionKey = "1SXl35qi911Sqd0iE6aphYpvHMf4NaiB2cp6NulSOBnVxxnggb5qJQQJ99BJAC5T7U2XJ3w3AAAYACOGOHbN";
-    private string serviceRegion = "francecentral";
+    private string localTtsUrl = "http://127.0.0.1:8000/tts";
+    private float localRequestTimeout = 12f;
 
-    // public AudioSource speechAudioSource;
+    private string azureSubscriptionKey = "1SXl35qi911Sqd0iE6aphYpvHMf4NaiB2cp6NulSOBnVxxnggb5qJQQJ99BJAC5T7U2XJ3w3AAAYACOGOHbN";
+    private string azureServiceRegion = "francecentral";
+    private string azureVoiceName = "en-US-AnaNeural";
 
+    //  Speech → Text  (Azure)-------------------------------------------------
     public void ProcessAudio(AudioClip clip, SpeechToTextCallback callback)
     {
         if (clip == null)
@@ -49,7 +51,7 @@ public class AudioHandler : MonoBehaviour
     {
         byte[] wavBytes = AudioClipToWav(clip);
 
-        var config = SpeechConfig.FromSubscription(subscriptionKey, serviceRegion);
+        var config = SpeechConfig.FromSubscription(azureSubscriptionKey, azureServiceRegion);
         using (var audioInput = AudioInputStream.CreatePushStream())
         {
             audioInput.Write(wavBytes);
@@ -61,26 +63,123 @@ public class AudioHandler : MonoBehaviour
                 var result = await recognizer.RecognizeOnceAsync().ConfigureAwait(false);
 
                 if (result.Reason == ResultReason.RecognizedSpeech)
-                {
                     return result.Text;
-                }
-                else if (result.Reason == ResultReason.NoMatch)
-                {
+                if (result.Reason == ResultReason.NoMatch)
                     return "No speech could be recognized.";
-                }
-                else if (result.Reason == ResultReason.Canceled)
+                if (result.Reason == ResultReason.Canceled)
                 {
                     var cancellation = CancellationDetails.FromResult(result);
                     return $"Speech recognition canceled: {cancellation.Reason}";
                 }
-                else
-                {
-                    return "Speech recognition failed.";
-                }
+                return "Speech recognition failed.";
             }
         }
     }
 
+    //  Text → Speech (Try local first, if failed to Azure) -----------------------------------------------------
+    public void SpeakText(string text, TextToSpeechCallback callback)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Debug.LogWarning("AudioHandler: SpeakText called with empty text.");
+            callback?.Invoke(null);
+            return;
+        }
+
+        StartCoroutine(SpeakTextCoroutine(text, callback));
+    }
+
+    private IEnumerator SpeakTextCoroutine(string text, TextToSpeechCallback callback)
+    {
+        // Try local
+        using (UnityWebRequest req = CreateLocalTtsRequest(text))
+        {
+            req.timeout = Mathf.RoundToInt(localRequestTimeout);
+
+            Debug.Log($"[TTS] Trying local server → {text}");
+            yield return req.SendWebRequest();
+
+            if (req.result == UnityWebRequest.Result.Success)
+            {
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(req);
+                if (clip != null && clip.length > 0.05f) // basic sanity check
+                {
+                    Debug.Log("[TTS] Local StyleTTS2 succeeded");
+                    callback?.Invoke(clip);
+                    yield break;
+                }
+            }
+
+            Debug.LogWarning($"[TTS] Local server failed ({req.result}): {req.error} → falling back to Azure");
+        }
+
+        // Try Azure
+        Debug.Log("[TTS] Using Azure fallback");
+        var azureTask = TextToSpeechAzureAsync(text);
+        while (!azureTask.IsCompleted) yield return null;
+
+        float[] samples = azureTask.Result;
+        if (samples == null || samples.Length == 0)
+        {
+            Debug.LogError("Azure TTS also failed.");
+            callback?.Invoke(null);
+            yield break;
+        }
+
+        AudioClip azureClip = AudioClip.Create("AzureTTS", samples.Length, 1, 16000, false);
+        azureClip.SetData(samples, 0);
+        callback?.Invoke(azureClip);
+    }
+
+    private UnityWebRequest CreateLocalTtsRequest(string text)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("text", text);
+
+        var request = UnityWebRequest.Post(localTtsUrl, form);
+        request.downloadHandler = new DownloadHandlerAudioClip(localTtsUrl, AudioType.WAV);
+        request.SetRequestHeader("Accept", "audio/wav");
+
+        return request;
+    }
+
+    private async Task<float[]> TextToSpeechAzureAsync(string text)
+    {
+        try
+        {
+            var config = SpeechConfig.FromSubscription(azureSubscriptionKey, azureServiceRegion);
+            config.SpeechSynthesisVoiceName = azureVoiceName;
+
+            using (var synthesizer = new SpeechSynthesizer(config, null))
+            {
+                var result = await synthesizer.SpeakTextAsync(text).ConfigureAwait(false);
+
+                if (result.Reason == ResultReason.SynthesizingAudioCompleted)
+                {
+                    return ConvertAudioDataToFloat(result.AudioData);
+                }
+
+                if (result.Reason == ResultReason.Canceled)
+                {
+                    var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
+                    Debug.LogError($"Azure TTS canceled: {cancellation.Reason} - {cancellation.ErrorDetails}");
+                }
+                else
+                {
+                    Debug.LogError($"Azure TTS failed: {result.Reason}");
+                }
+
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Azure TTS exception: {ex.Message}");
+            return null;
+        }
+    }
+
+    //  Helpers --------------------------------------------------------
     private byte[] AudioClipToWav(AudioClip clip)
     {
         int sampleCount = clip.samples * clip.channels;
@@ -88,112 +187,50 @@ public class AudioHandler : MonoBehaviour
         clip.GetData(samples, 0);
 
         byte[] pcmData = new byte[sampleCount * 2];
-        int rescaleFactor = 32767; // convert float to Int16
+        const int rescaleFactor = 32767;
 
         for (int i = 0; i < sampleCount; i++)
         {
             short intData = (short)(samples[i] * rescaleFactor);
-            byte[] byteArr = BitConverter.GetBytes(intData);
-            pcmData[i * 2] = byteArr[0];
-            pcmData[i * 2 + 1] = byteArr[1];
+            byte[] bytes = BitConverter.GetBytes(intData);
+            pcmData[i * 2] = bytes[0];
+            pcmData[i * 2 + 1] = bytes[1];
         }
 
-        using (MemoryStream memoryStream = new MemoryStream())
+        using (var ms = new System.IO.MemoryStream())
         {
-            // WAV header
-            int hz = 16000; // 16kHz
-            int channels = 1; // mono
+            int hz = 16000;
+            int channels = 1;
 
-            // RIFF header
-            memoryStream.Write(System.Text.Encoding.UTF8.GetBytes("RIFF"), 0, 4);
-            memoryStream.Write(BitConverter.GetBytes(36 + pcmData.Length), 0, 4);
-            memoryStream.Write(System.Text.Encoding.UTF8.GetBytes("WAVE"), 0, 4);
-            // fmt subchunk
-            memoryStream.Write(System.Text.Encoding.UTF8.GetBytes("fmt "), 0, 4);
-            memoryStream.Write(BitConverter.GetBytes(16), 0, 4); // SubChunk1Size
-            memoryStream.Write(BitConverter.GetBytes((short)1), 0, 2); // AudioFormat PCM
-            memoryStream.Write(BitConverter.GetBytes((short)channels), 0, 2);
-            memoryStream.Write(BitConverter.GetBytes(hz), 0, 4);
-            memoryStream.Write(BitConverter.GetBytes(hz * channels * 2), 0, 4); // ByteRate
-            memoryStream.Write(BitConverter.GetBytes((short)(channels * 2)), 0, 2); // BlockAlign
-            memoryStream.Write(BitConverter.GetBytes((short)16), 0, 2); // BitsPerSample
-            // data subchunk
-            memoryStream.Write(System.Text.Encoding.UTF8.GetBytes("data"), 0, 4);
-            memoryStream.Write(BitConverter.GetBytes(pcmData.Length), 0, 4);
-            // Write PCM data
-            memoryStream.Write(pcmData, 0, pcmData.Length);
+            ms.Write(System.Text.Encoding.UTF8.GetBytes("RIFF"), 0, 4);
+            ms.Write(BitConverter.GetBytes(36 + pcmData.Length), 0, 4);
+            ms.Write(System.Text.Encoding.UTF8.GetBytes("WAVE"), 0, 4);
+            ms.Write(System.Text.Encoding.UTF8.GetBytes("fmt "), 0, 4);
+            ms.Write(BitConverter.GetBytes(16), 0, 4);
+            ms.Write(BitConverter.GetBytes((short)1), 0, 2);
+            ms.Write(BitConverter.GetBytes((short)channels), 0, 2);
+            ms.Write(BitConverter.GetBytes(hz), 0, 4);
+            ms.Write(BitConverter.GetBytes(hz * channels * 2), 0, 4);
+            ms.Write(BitConverter.GetBytes((short)(channels * 2)), 0, 2);
+            ms.Write(BitConverter.GetBytes((short)16), 0, 2);
+            ms.Write(System.Text.Encoding.UTF8.GetBytes("data"), 0, 4);
+            ms.Write(BitConverter.GetBytes(pcmData.Length), 0, 4);
+            ms.Write(pcmData, 0, pcmData.Length);
 
-            return memoryStream.ToArray();
-        }
-    }
-
-    public void SpeakText(string text, TextToSpeechCallback callback)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            Debug.LogWarning("AudioHandler: SpeakText called with empty text.");
-            callback?.Invoke(null);
-            return;
-        }
-        StartCoroutine(SpeakTextCoroutine(text, callback));
-    }
-
-    private IEnumerator SpeakTextCoroutine(string text, TextToSpeechCallback callback)
-    {
-        var task = TextToSpeechAsync(text);
-        while (!task.IsCompleted) yield return null;
-
-        float[] audioData = task.Result;
-        if (audioData == null)
-        {
-            Debug.LogError($"Text-to-Speech error: {task.Exception.Message}");
-        }
-        else
-        {
-            int sampleCount = audioData.Length;
-            AudioClip audioClip = AudioClip.Create("TTS_AudioClip", sampleCount, 1, 16000, false);
-            audioClip.SetData(audioData, 0);
-            callback?.Invoke(audioClip);
-        }
-    }
-
-    private async Task<float[]> TextToSpeechAsync(string text)
-    {
-        var config = SpeechConfig.FromSubscription(subscriptionKey, serviceRegion);
-        config.SpeechSynthesisVoiceName = "en-US-AnaNeural";
-
-        using (var synthesizer = new SpeechSynthesizer(config, null))
-        {
-            var result = await synthesizer.SpeakTextAsync(text).ConfigureAwait(false);
-
-            if (result.Reason == ResultReason.SynthesizingAudioCompleted)
-            {
-                return ConvertAudioDataToFloat(result.AudioData);
-            }
-            else if (result.Reason == ResultReason.Canceled)
-            {
-                var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
-                Debug.LogError($"TTS canceled: {cancellation.Reason} - {cancellation.ErrorDetails}");
-                return null;
-            }
-            else
-            {
-                Debug.LogError("TTS synthesis failed.");
-                return null;
-            }
+            return ms.ToArray();
         }
     }
 
     private float[] ConvertAudioDataToFloat(byte[] audioBytes)
     {
         int samples = audioBytes.Length / 2;
-        float[] audioFloats = new float[samples];
+        float[] floats = new float[samples];
 
         for (int i = 0; i < samples; i++)
         {
-            short sample = (short)(audioBytes[i * 2] | (audioBytes[i * 2 + 1] << 8));
-            audioFloats[i] = sample / 32768f;
+            short s = (short)(audioBytes[i * 2] | (audioBytes[i * 2 + 1] << 8));
+            floats[i] = s / 32768f;
         }
-        return audioFloats;
+        return floats;
     }
 }
