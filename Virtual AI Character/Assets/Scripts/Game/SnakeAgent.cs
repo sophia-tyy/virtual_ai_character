@@ -8,8 +8,7 @@ public class SnakeAgent : Agent
     public AISnakeController snake;
     public LayerMask bodyMask = -1;
 
-    public Transform foodPrefab;
-    public Transform foodParent;
+    public FoodFactory foodFactory;
 
     public Transform borderLeft;
     public Transform borderRight;
@@ -44,7 +43,7 @@ public class SnakeAgent : Agent
         {
             float x = Random.Range(borderLeft.position.x + 0.2f, borderRight.position.x - 0.2f);
             float y = Random.Range(borderTop.position.y - 0.2f, borderBottom.position.y + 0.2f);
-            Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity, foodParent);
+            foodFactory.InstantiateFood(x, y);
         }
     }
 
