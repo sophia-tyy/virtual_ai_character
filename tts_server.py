@@ -19,8 +19,9 @@ def relaxed_load(*args, **kwargs):
 torch.load = relaxed_load
 
 my_tts = tts.StyleTTS2(
-    model_checkpoint_path='my_character_model\Models\LibriTTS\epoch_2nd_00019.pth',
-    config_path='my_character_model\Models\LibriTTS\config.yml'
+    #FINETUNED_MODEL_PATH
+    model_checkpoint_path='../tts_model_2/content/StyleTTS2/Models/LibriTTS/epoch_2nd_00019.pth',
+    config_path='Configs/config_libritts.yml'
 )
 
 app = FastAPI()
@@ -31,7 +32,7 @@ def generate_tts(text: str = Form(...)):
     
     my_tts.inference(
         text,
-        target_voice_path="my_voice_sample.wav",
+        target_voice_path="../huohuo_no_tail/archive_huohuo_1.wav",
         output_wav_file=output_file
     )
     
