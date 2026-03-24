@@ -64,7 +64,7 @@ public class AISnakeController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Food"))
         {
-            // Destroy(collision.gameObject);
+            Destroy(collision.gameObject);
             // GameDataManager.Instance.AddScore(1);
             // GameController.GetComponent<GameController>().UpdateDisplayScores();
             snakeAgent.AddReward(5.0f);
@@ -76,7 +76,7 @@ public class AISnakeController : MonoBehaviour
         }
         else
         {
-            snakeAgent.AddReward(-5.0f);
+            snakeAgent.AddReward(-20.0f);
             snakeAgent._cumulativeReward = snakeAgent.GetCumulativeReward();
             snakeAgent.EndEpisode();
             // CancelInvoke();

@@ -32,6 +32,8 @@ public class SnakeAgent : Agent
     public override void OnEpisodeBegin()
     {
         snake.ResetSnake();
+        GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
+        foreach (GameObject food in foods) { Destroy(food); }
         _currentEpisode++;
         _cumulativeReward = 0f;
         SpawnFood();
@@ -81,7 +83,7 @@ public class SnakeAgent : Agent
     {
         int dirCode = actions.DiscreteActions[0];
         snake.ChangeDirection(MapDirCode(dirCode));
-        AddReward(-2f);
+        AddReward(0.00005f);
         _cumulativeReward = GetCumulativeReward();
     }
 
