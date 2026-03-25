@@ -32,7 +32,7 @@ public class SnakeController : MonoBehaviour
     void Move()
     {
         Vector3 headPrevPos = transform.position;
-        transform.Translate(dir * step);
+        transform.Translate(dir * (step * 2));
         for (int i = 0; i < bodyParts.Count; i++)
         {
             Vector3 tempPos = bodyParts[i].position;
@@ -62,7 +62,10 @@ public class SnakeController : MonoBehaviour
     void AddBodyPart()
     {
         GameObject newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().snakeParent);
-        newBody.transform.position = bodyParts.Count > 0 ? bodyParts[bodyParts.Count - 1].position : transform.position;
+        Vector3 spawnPos;
+        if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
+        else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;
+        newBody.transform.position = spawnPos;
         bodyParts.Add(newBody.transform);
     }
 }
