@@ -11,6 +11,7 @@ public class AISnakeController : MonoBehaviour
     public GameObject snakeBodyPrefab;
     public List<Transform> bodyParts = new List<Transform>();
     public SnakeAgent snakeAgent;
+    private int pendingDir = 0;
 
 
     void Start()
@@ -20,16 +21,22 @@ public class AISnakeController : MonoBehaviour
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
 
-    public void ChangeDirection(int direction)
+    public void ChangeDirection(int dirCode)
     {
-        if (direction == 1 && dir != Vector2.left) dir = Vector2.right;
-        else if (direction == 2 && dir != Vector2.right) dir = Vector2.left;
-        else if (direction == 3 && dir != Vector2.down) dir = Vector2.up;
-        else if (direction == 4 && dir != Vector2.up) dir = Vector2.down;
+        pendingDir = dirCode;
     }
 
     void Move()
     {
+        if (pendingDir != 0)
+        {
+            Vector2 newDir = dir;
+            if (pendingDir == 1) {newDir = new Vector2(dir.y, -dir.x); }
+            else if (pendingDir == 2) { newDir = new Vector2(-dir.y, dir.x); }
+            dir = newDir;
+            pendingDir = 0;
+        }
+
         Vector3 headPrevPos = transform.position;
         transform.Translate(dir * step);
         for (int i = 0; i < bodyParts.Count; i++)
@@ -43,7 +50,10 @@ public class AISnakeController : MonoBehaviour
     void AddBodyPart()
     {
         GameObject newBody = Instantiate(snakeBodyPrefab);
-        newBody.transform.position = bodyParts.Count > 0 ? bodyParts[bodyParts.Count - 1].position : transform.position;
+        Vector3 spawnPos;
+        if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
+        else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;
+        newBody.transform.position = spawnPos;
         bodyParts.Add(newBody.transform);
     }
 
@@ -51,6 +61,7 @@ public class AISnakeController : MonoBehaviour
     {
         transform.position = Vector3.zero;
         dir = Vector2.up;
+        pendingDir = 0;
 
         foreach (Transform part in bodyParts) Destroy(part.gameObject);
         bodyParts.Clear();
@@ -65,9 +76,7 @@ public class AISnakeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Food"))
         {
             Destroy(collision.gameObject);
-            // GameDataManager.Instance.AddScore(1);
-            // GameController.GetComponent<GameController>().UpdateDisplayScores();
-            snakeAgent.AddReward(5.0f);
+            snakeAgent.AddReward(10.0f);
             snakeAgent._cumulativeReward = snakeAgent.GetCumulativeReward();
             AddBodyPart();
 
@@ -80,8 +89,6 @@ public class AISnakeController : MonoBehaviour
             snakeAgent._cumulativeReward = snakeAgent.GetCumulativeReward();
             snakeAgent.EndEpisode();
             // CancelInvoke();
-            // GameDataManager.Instance.ResetCurrentScore();
-            // GameController.GetComponent<GameController>().UpdateDisplayScores();
             // GameController.GetComponent<GameController>().EndGame();
         }
     }

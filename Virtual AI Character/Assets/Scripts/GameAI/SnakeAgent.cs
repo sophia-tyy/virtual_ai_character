@@ -82,12 +82,10 @@ public class SnakeAgent : Agent
     public override void OnActionReceived(ActionBuffers actions)
     {
         int dirCode = actions.DiscreteActions[0];
-        snake.ChangeDirection(MapDirCode(dirCode));
+        snake.ChangeDirection(dirCode);
         AddReward(0.00005f);
         _cumulativeReward = GetCumulativeReward();
     }
-
-    int MapDirCode(int code) => code switch { 0 => 3, 1 => 1, 2 => 4, 3 => 2, _ => 0 };
 
     GameObject UpdateClosestFood()
     {

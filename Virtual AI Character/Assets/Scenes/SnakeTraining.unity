@@ -954,8 +954,40 @@ PrefabInstance:
       value: snake_head_AI
       objectReference: {fileID: 0}
     - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_Model
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_BehaviorType
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_InferenceDevice
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
       propertyPath: m_BrainParameters.VectorObservationSize
       value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_BrainParameters.VectorActionSize.Array.data[0]
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1737756897524168515, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_BrainParameters.m_ActionSpec.BranchSizes.Array.data[0]
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5412593807437918438, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_Color.b
+      value: 0.49803925
+      objectReference: {fileID: 0}
+    - target: {fileID: 5412593807437918438, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_Color.g
+      value: 0.49803925
+      objectReference: {fileID: 0}
+    - target: {fileID: 5412593807437918438, guid: 031941be2895ab642869d26c6fee2274, type: 3}
+      propertyPath: m_Color.r
+      value: 0.49803925
       objectReference: {fileID: 0}
     - target: {fileID: 7978821989345519723, guid: 031941be2895ab642869d26c6fee2274, type: 3}
       propertyPath: borderTop
