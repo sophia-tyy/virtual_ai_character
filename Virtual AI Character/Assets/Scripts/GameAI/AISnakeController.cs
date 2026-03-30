@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using Unity.MLAgents;
-using Unity.MLAgents.Sensors;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class AISnakeController : MonoBehaviour
 {
@@ -10,13 +8,14 @@ public class AISnakeController : MonoBehaviour
     public float step = 0.2f;
     public GameObject snakeBodyPrefab;
     public List<Transform> bodyParts = new List<Transform>();
-    public SnakeAgent snakeAgent;
+    // public SnakeAgent snakeAgent;
     private int pendingDir = 0;
-
+    public UnityEvent onAteFood;
+    public UnityEvent onDied;
 
     void Start()
     {
-        snakeAgent = GetComponent<SnakeAgent>();
+        // snakeAgent = GetComponent<SnakeAgent>();
         for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
@@ -76,18 +75,15 @@ public class AISnakeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Food"))
         {
             Destroy(collision.gameObject);
-            snakeAgent.AddReward(10.0f);
-            snakeAgent._cumulativeReward = snakeAgent.GetCumulativeReward();
             AddBodyPart();
+            onAteFood?.Invoke();
 
             GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
-            if (foods.Length == 0) { snakeAgent.EndEpisode(); }
+            // if (foods.Length == 0) { snakeAgent.EndEpisode(); }
         }
         else
         {
-            snakeAgent.AddReward(-20.0f);
-            snakeAgent._cumulativeReward = snakeAgent.GetCumulativeReward();
-            snakeAgent.EndEpisode();
+            onDied?.Invoke();
             // CancelInvoke();
             // GameController.GetComponent<GameController>().EndGame();
         }

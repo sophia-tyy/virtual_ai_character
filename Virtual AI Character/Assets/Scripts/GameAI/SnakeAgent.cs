@@ -27,6 +27,22 @@ public class SnakeAgent : Agent
 
         _currentEpisode = 0;
         _cumulativeReward = 0f;
+
+        snake.onAteFood.AddListener(HandleAteFood);
+        snake.onDied.AddListener(HandleDied);
+    }
+
+    private void HandleAteFood()
+    {
+        AddReward(10.0f);
+        _cumulativeReward = GetCumulativeReward();
+    }
+
+    private void HandleDied()
+    {
+        AddReward(-20.0f);
+        _cumulativeReward = GetCumulativeReward();
+        EndEpisode();
     }
 
     public override void OnEpisodeBegin()
