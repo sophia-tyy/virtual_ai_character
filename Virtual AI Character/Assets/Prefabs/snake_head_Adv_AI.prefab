@@ -14,9 +14,9 @@ GameObject:
   - component: {fileID: 3716937352451504000}
   - component: {fileID: 7620756251947825916}
   - component: {fileID: 1737756897524168515}
-  - component: {fileID: 7978821989345519723}
+  - component: {fileID: -4772148150490870504}
   m_Layer: 0
-  m_Name: snake_head_AI
+  m_Name: snake_head_Adv_AI
   m_TagString: Snake
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 32767
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.43625063, g: 0.96862745, b: 0.33725485, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -196,24 +196,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 20
+    VectorObservationSize: 40
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 04000000
-    VectorActionSize: 04000000
+      BranchSizes: 03000000
+    VectorActionSize: 03000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: SnakeAI
+  m_BehaviorName: AdvSnakeAI
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
   m_ObservableAttributeHandling: 0
---- !u!114 &7978821989345519723
+--- !u!114 &-4772148150490870504
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -222,7 +222,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 84336450437971822}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c2ab2f59304a484aae95f6eb985be80, type: 3}
+  m_Script: {fileID: 11500000, guid: 7648504089f9c2745aee07f8d6862a0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   agentParameters:
@@ -230,6 +230,14 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
   snake: {fileID: 7620756251947825916}
+  opponentSnake: {fileID: 0}
   bodyMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  foodFactory: {fileID: 0}
+  borderLeft: {fileID: 0}
+  borderRight: {fileID: 0}
+  borderTop: {fileID: 0}
+  borderBottom: {fileID: 0}
+  _currentEpisode: 0
+  _cumulativeReward: 0

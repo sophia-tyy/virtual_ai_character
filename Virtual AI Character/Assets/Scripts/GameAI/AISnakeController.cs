@@ -56,9 +56,9 @@ public class AISnakeController : MonoBehaviour
         bodyParts.Add(newBody.transform);
     }
 
-    public void ResetSnake()
+    public void ResetSnake(Vector3 startPosition)
     {
-        transform.position = Vector3.zero;
+        transform.position = startPosition;
         dir = Vector2.up;
         pendingDir = 0;
 

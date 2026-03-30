@@ -8,62 +8,62 @@ public class SnakeAgent : Agent
     public AISnakeController snake;
     public LayerMask bodyMask = -1;
 
-    public FoodFactory foodFactory;
+    // public FoodFactory foodFactory;
 
-    public Transform borderLeft;
-    public Transform borderRight;
-    public Transform borderTop;
-    public Transform borderBottom;
+    // public Transform borderLeft;
+    // public Transform borderRight;
+    // public Transform borderTop;
+    // public Transform borderBottom;
 
     private GameObject currentFood;
 
-    public int _currentEpisode = 0;
-    public float _cumulativeReward = 0f;
+    // public int _currentEpisode = 0;
+    // public float _cumulativeReward = 0f;
 
     public override void Initialize()
     {
         if (snake == null) snake = GetComponent<AISnakeController>();
         if (snake == null) Debug.LogError("AISnakeController not found on SnakeAgent!");
 
-        _currentEpisode = 0;
-        _cumulativeReward = 0f;
+        // _currentEpisode = 0;
+        // _cumulativeReward = 0f;
 
-        snake.onAteFood.AddListener(HandleAteFood);
-        snake.onDied.AddListener(HandleDied);
+        // snake.onAteFood.AddListener(HandleAteFood);
+        // snake.onDied.AddListener(HandleDied);
     }
 
-    private void HandleAteFood()
-    {
-        AddReward(10.0f);
-        _cumulativeReward = GetCumulativeReward();
-    }
+    // private void HandleAteFood()
+    // {
+    //     AddReward(10.0f);
+    //     _cumulativeReward = GetCumulativeReward();
+    // }
 
-    private void HandleDied()
-    {
-        AddReward(-20.0f);
-        _cumulativeReward = GetCumulativeReward();
-        EndEpisode();
-    }
+    // private void HandleDied()
+    // {
+    //     AddReward(-20.0f);
+    //     _cumulativeReward = GetCumulativeReward();
+    //     EndEpisode();
+    // }
 
     public override void OnEpisodeBegin()
     {
-        snake.ResetSnake();
-        GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
-        foreach (GameObject food in foods) { Destroy(food); }
-        _currentEpisode++;
-        _cumulativeReward = 0f;
-        SpawnFood();
+        // snake.ResetSnake();
+        // GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
+        // foreach (GameObject food in foods) { Destroy(food); }
+        // _currentEpisode++;
+        // _cumulativeReward = 0f;
+        // SpawnFood();
     }
 
-    void SpawnFood()
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            float x = Random.Range(borderLeft.position.x + 0.2f, borderRight.position.x - 0.2f);
-            float y = Random.Range(borderTop.position.y - 0.2f, borderBottom.position.y + 0.2f);
-            foodFactory.InstantiateFood(x, y);
-        }
-    }
+    // void SpawnFood()
+    // {
+    //     for (int i = 0; i < 5; i++)
+    //     {
+    //         float x = Random.Range(borderLeft.position.x + 0.2f, borderRight.position.x - 0.2f);
+    //         float y = Random.Range(borderTop.position.y - 0.2f, borderBottom.position.y + 0.2f);
+    //         foodFactory.InstantiateFood(x, y);
+    //     }
+    // }
 
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -99,8 +99,8 @@ public class SnakeAgent : Agent
     {
         int dirCode = actions.DiscreteActions[0];
         snake.ChangeDirection(dirCode);
-        AddReward(0.00005f);
-        _cumulativeReward = GetCumulativeReward();
+        // AddReward(0.00005f);
+        // _cumulativeReward = GetCumulativeReward();
     }
 
     GameObject UpdateClosestFood()
