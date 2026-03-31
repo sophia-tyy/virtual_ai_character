@@ -4,6 +4,7 @@ using UnityEngine.Events;
 
 public class AISnakeController : MonoBehaviour
 {
+    public GameObject GameController;
     public Vector2 dir = Vector2.up;
     public float step = 0.2f;
     public GameObject snakeBodyPrefab;
@@ -14,6 +15,7 @@ public class AISnakeController : MonoBehaviour
 
     void Start()
     {
+        GameController = GameObject.Find("GameController");
         for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
@@ -46,7 +48,7 @@ public class AISnakeController : MonoBehaviour
 
     void AddBodyPart()
     {
-        GameObject newBody = Instantiate(snakeBodyPrefab);
+        GameObject newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().AISnakeParent);
         Vector3 spawnPos;
         if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
         else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;

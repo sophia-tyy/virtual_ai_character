@@ -25,11 +25,11 @@ public class SnakeAgentTrainer : Agent
     public bool respawnFood = true;
 
     [Header("Rewards")]
-    public float foodReward = 5.0f;
+    public float foodReward = 10.0f;
     public float deathPenalty = -20.0f;
-    public float surviveReward = 0.002f;
-    public float towardFoodRewardScale = 0.001f;
-    public float awayFromFoodPenaltyScale = -0.001f;
+    public float surviveReward = 0.00005f;
+    public float towardFoodRewardScale = 0.01f;
+    public float awayFromFoodPenaltyScale = -0.01f;
 
     public override void Initialize()
     {

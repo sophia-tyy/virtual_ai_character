@@ -1261,7 +1261,7 @@ GameObject:
   m_Component:
   - component: {fileID: 487405304}
   m_Layer: 0
-  m_Name: snake
+  m_Name: player_snake
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2203,8 +2203,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63da9a609125de7489c58e10dfd8d29f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  snakeHeadPrefab: {fileID: 8860861488040464343, guid: 2031a693faf4f8643a2869f2a5353917, type: 3}
-  snakeParent: {fileID: 487405304}
+  playerSnakeHeadPrefab: {fileID: 8860861488040464343, guid: 2031a693faf4f8643a2869f2a5353917, type: 3}
+  playerSnakeParent: {fileID: 487405304}
+  AISnakeHeadPrefab: {fileID: 8860861488040464343, guid: 64749f196d6ccf144832bbdfb4993e95, type: 3}
+  AISnakeParent: {fileID: 1453707313}
   foodPrefab: {fileID: 3921374854037433441, guid: 76a6baa64de0fba46bf429ff333656e3, type: 3}
   foodParent: {fileID: 41008103}
   borderLeft: {fileID: 1333196721}
@@ -2425,6 +2427,37 @@ Transform:
   - {fileID: 257298595}
   - {fileID: 1333196721}
   - {fileID: 348986130}
+  m_Father: {fileID: 1835498755}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1453707312
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1453707313}
+  m_Layer: 0
+  m_Name: AI_snake
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1453707313
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1453707312}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 1835498755}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1499279786
@@ -3075,6 +3108,7 @@ Transform:
   m_Children:
   - {fileID: 1440538142}
   - {fileID: 487405304}
+  - {fileID: 1453707313}
   - {fileID: 41008103}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

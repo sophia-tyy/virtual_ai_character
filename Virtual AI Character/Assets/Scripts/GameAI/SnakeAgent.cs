@@ -5,86 +5,82 @@ using UnityEngine;
 
 public class SnakeAgent : Agent
 {
+    public GameObject GameController;
+    [Header("Agent Components")]
     public AISnakeController snake;
-    public LayerMask bodyMask = -1;
+    public LayerMask obstacleMask = -1;
 
-    // public FoodFactory foodFactory;
-
-    // public Transform borderLeft;
-    // public Transform borderRight;
-    // public Transform borderTop;
-    // public Transform borderBottom;
-
-    private GameObject currentFood;
-
-    // public int _currentEpisode = 0;
-    // public float _cumulativeReward = 0f;
+    private GameObject targetFood;
 
     public override void Initialize()
     {
+        GameController = GameObject.Find("GameController");
+        
         if (snake == null) snake = GetComponent<AISnakeController>();
         if (snake == null) Debug.LogError("AISnakeController not found on SnakeAgent!");
 
-        // _currentEpisode = 0;
-        // _cumulativeReward = 0f;
-
-        // snake.onAteFood.AddListener(HandleAteFood);
-        // snake.onDied.AddListener(HandleDied);
+        snake.onAteFood.AddListener(HandleAteFood);
+        snake.onDied.AddListener(HandleDied);
     }
 
-    // private void HandleAteFood()
-    // {
-    //     AddReward(10.0f);
-    //     _cumulativeReward = GetCumulativeReward();
-    // }
+    private void HandleAteFood() { GameController.GetComponent<GameController>().Spawn(); }
 
-    // private void HandleDied()
-    // {
-    //     AddReward(-20.0f);
-    //     _cumulativeReward = GetCumulativeReward();
-    //     EndEpisode();
-    // }
+    public void HandleDied()
+    {
+        EndEpisode();
+        if (snake != null && snake.bodyParts != null)
+        {
+            foreach (Transform part in snake.bodyParts) Destroy(part.gameObject);
+            snake.bodyParts.Clear();
+        }
+        Destroy(snake.gameObject);
+    }
 
     public override void OnEpisodeBegin()
     {
-        // snake.ResetSnake();
-        // GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
-        // foreach (GameObject food in foods) { Destroy(food); }
-        // _currentEpisode++;
-        // _cumulativeReward = 0f;
-        // SpawnFood();
+        targetFood = null;
     }
 
-    // void SpawnFood()
-    // {
-    //     for (int i = 0; i < 5; i++)
-    //     {
-    //         float x = Random.Range(borderLeft.position.x + 0.2f, borderRight.position.x - 0.2f);
-    //         float y = Random.Range(borderTop.position.y - 0.2f, borderBottom.position.y + 0.2f);
-    //         foodFactory.InstantiateFood(x, y);
-    //     }
-    // }
+    private void FindFood()
+    {
+        GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
+        float closestDistance = Mathf.Infinity;
+        targetFood = null;
+
+        foreach (GameObject food in foods)
+        {
+            if (food == null) continue;
+
+            float distance = Vector2.Distance(transform.position, food.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                targetFood = food;
+            }
+        }
+    }
 
     public override void CollectObservations(VectorSensor sensor)
     {
         for (int angle = 0; angle < 360; angle += 45)
         {
             Vector2 dir = Quaternion.Euler(0, 0, angle) * Vector2.right;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, 5f, bodyMask);
-            sensor.AddObservation(hit.distance > 5f ? 5f : hit.distance);
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, 5f, obstacleMask);
+            float distNorm = (hit.collider ? hit.distance : 5f) / 5f;
+            sensor.AddObservation(distNorm);
             sensor.AddObservation(hit.collider ? 1f : 0f);
         }
 
-        currentFood = UpdateClosestFood();
-        if (currentFood != null)
+        FindFood();
+        if (targetFood != null)
         {
-            Vector2 relFood = ((Vector2)currentFood.transform.position - (Vector2)transform.position).normalized;
+            Vector2 relFood = ((Vector2)targetFood.transform.position - (Vector2)transform.position).normalized;
             sensor.AddObservation(relFood);
-            sensor.AddObservation(Vector2.Distance(transform.position, currentFood.transform.position) / 10f);
+            sensor.AddObservation(Vector2.Distance(transform.position, targetFood.transform.position) / 10f);
         }
         else
         {
-            sensor.AddObservation(Vector3.zero);
+            sensor.AddObservation(Vector2.zero);
             sensor.AddObservation(0f);
         }
 
@@ -99,22 +95,5 @@ public class SnakeAgent : Agent
     {
         int dirCode = actions.DiscreteActions[0];
         snake.ChangeDirection(dirCode);
-        // AddReward(0.00005f);
-        // _cumulativeReward = GetCumulativeReward();
-    }
-
-    GameObject UpdateClosestFood()
-    {
-        GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
-        if (foods.Length == 0) { currentFood = null; return null; }
-
-        currentFood = foods[0];
-        float minDist = Vector2.Distance(transform.position, currentFood.transform.position);
-        foreach (var f in foods)
-        {
-            float dist = Vector2.Distance(transform.position, f.transform.position);
-            if (dist < minDist) { minDist = dist; currentFood = f; }
-        }
-        return currentFood;
     }
 }

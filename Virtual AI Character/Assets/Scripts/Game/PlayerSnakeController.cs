@@ -3,21 +3,19 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class SnakeController : MonoBehaviour
+public class PlayerSnakeController : MonoBehaviour
 {
     public Vector2 dir = Vector2.up;
     public float step = 0.2f;
     public GameObject snakeBodyPrefab;
+    public Color snakeBodyColor = Color.green;
     private List<Transform> bodyParts = new List<Transform>();
     public GameObject GameController;
 
     void Start()
     {
         GameController = GameObject.Find("GameController");
-        for (int i = 0; i < 3; i++)
-        {
-            AddBodyPart();
-        }
+        for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
 
@@ -48,6 +46,7 @@ public class SnakeController : MonoBehaviour
             Destroy(collision.gameObject);
             GameDataManager.Instance.AddScore(1);
             GameController.GetComponent<GameController>().UpdateDisplayScores();
+            GameController.GetComponent<GameController>().Spawn();
             AddBodyPart();
         }
         else
@@ -61,11 +60,12 @@ public class SnakeController : MonoBehaviour
 
     void AddBodyPart()
     {
-        GameObject newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().snakeParent);
+        GameObject newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().playerSnakeParent);
         Vector3 spawnPos;
         if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
         else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;
         newBody.transform.position = spawnPos;
+        newBody.GetComponent<SpriteRenderer>().color = snakeBodyColor;
         bodyParts.Add(newBody.transform);
     }
 }

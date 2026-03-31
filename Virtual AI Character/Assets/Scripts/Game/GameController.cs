@@ -4,10 +4,17 @@ using UnityEngine.Events;
 
 public class GameController : MonoBehaviour
 {
-    public Transform snakeHeadPrefab;
-    public Transform snakeParent;
-    private SnakeController snakeController;
+    [Header("Player Snake Settings")]
+    public Transform playerSnakeHeadPrefab;
+    public Transform playerSnakeParent;
+    private PlayerSnakeController playerSnakeController;
 
+    [Header("AI Snake Settings")]
+    public Transform AISnakeHeadPrefab;
+    public Transform AISnakeParent;
+    private AISnakeController AISnakeController;
+
+    [Header("Game Environment Settings")]
     public Transform foodPrefab;
     public Transform foodParent;
 
@@ -16,6 +23,7 @@ public class GameController : MonoBehaviour
     public Transform borderTop;
     public Transform borderBottom;
 
+    [Header("UI & Events")]
     public GameObject gamePanel;
     public GameObject startButton;
 
@@ -43,40 +51,38 @@ public class GameController : MonoBehaviour
         float x = (borderLeft.position.x + borderRight.position.x) / 2;
         float y = (borderTop.position.y + borderBottom.position.y) / 2;
 
-        Instantiate(snakeHeadPrefab, new Vector2(x, y), Quaternion.identity, snakeParent);
-        snakeController = FindObjectOfType<SnakeController>();
-        if (snakeController == null) Debug.LogError("SnakeController not found!");
+        Instantiate(playerSnakeHeadPrefab, new Vector2(x - 2, y), Quaternion.identity, playerSnakeParent);
+        playerSnakeController = FindObjectOfType<PlayerSnakeController>();
+        if (playerSnakeController == null) Debug.LogError("PlayerSnakeController not found!");
 
-        InvokeRepeating("Spawn", 3, 10);
+        Instantiate(AISnakeHeadPrefab, new Vector2(x + 2, y), Quaternion.identity, AISnakeParent);
+        AISnakeController = FindObjectOfType<AISnakeController>();
+        if (AISnakeController == null) Debug.LogError("AISnakeController not found!");
+
+        Spawn();
     }
 
-    void Spawn()
+    public void Spawn()
     {
         float x = Random.Range(borderLeft.position.x + 0.2f, borderRight.position.x - 0.2f);
         float y = Random.Range(borderTop.position.y - 0.2f, borderBottom.position.y + 0.2f);
         Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity, foodParent);
     }
 
-    public void TurnRight() {  snakeController.ChangeDirection(1); }
-    public void TurnLeft() {  snakeController.ChangeDirection(2); }
-    public void TurnUp() {  snakeController.ChangeDirection(3); }
-    public void TurnDown() {  snakeController.ChangeDirection(4); }
+    public void TurnRight() {  playerSnakeController.ChangeDirection(1); }
+    public void TurnLeft() {  playerSnakeController.ChangeDirection(2); }
+    public void TurnUp() {  playerSnakeController.ChangeDirection(3); }
+    public void TurnDown() {  playerSnakeController.ChangeDirection(4); }
 
     public void EndGame()
     {
-        CancelInvoke();
-
+        if (AISnakeController != null) AISnakeController.GetComponent<SnakeAgent>().HandleDied();
+        
         GameObject[] snakeObjects = GameObject.FindGameObjectsWithTag("Snake");
-        foreach (GameObject snake in snakeObjects)
-        {
-            Destroy(snake);
-        }
+        foreach (GameObject snake in snakeObjects) Destroy(snake);
 
         GameObject[] foodObjects = GameObject.FindGameObjectsWithTag("Food");
-        foreach (GameObject food in foodObjects)
-        {
-            Destroy(food);
-        }
+        foreach (GameObject food in foodObjects) Destroy(food);
 
         gamePanel.SetActive(false);
         startButton.SetActive(true);
