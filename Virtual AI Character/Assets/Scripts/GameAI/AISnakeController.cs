@@ -8,14 +8,12 @@ public class AISnakeController : MonoBehaviour
     public float step = 0.2f;
     public GameObject snakeBodyPrefab;
     public List<Transform> bodyParts = new List<Transform>();
-    // public SnakeAgent snakeAgent;
     private int pendingDir = 0;
     public UnityEvent onAteFood;
     public UnityEvent onDied;
 
     void Start()
     {
-        // snakeAgent = GetComponent<SnakeAgent>();
         for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
@@ -64,7 +62,7 @@ public class AISnakeController : MonoBehaviour
 
         foreach (Transform part in bodyParts) Destroy(part.gameObject);
         bodyParts.Clear();
-        for (int i = 0; i < 3; i++) AddBodyPart();
+        for (int i = 0; i < 2; i++) AddBodyPart();
         
         CancelInvoke();
         InvokeRepeating("Move", 0.3f, 0.5f);
@@ -77,15 +75,7 @@ public class AISnakeController : MonoBehaviour
             Destroy(collision.gameObject);
             AddBodyPart();
             onAteFood?.Invoke();
-
-            GameObject[] foods = GameObject.FindGameObjectsWithTag("Food");
-            // if (foods.Length == 0) { snakeAgent.EndEpisode(); }
         }
-        else
-        {
-            onDied?.Invoke();
-            // CancelInvoke();
-            // GameController.GetComponent<GameController>().EndGame();
-        }
+        else onDied?.Invoke();
     }
 }
