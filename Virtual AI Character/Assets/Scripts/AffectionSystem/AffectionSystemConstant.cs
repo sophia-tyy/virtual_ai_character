@@ -6,7 +6,7 @@ public static class AffectionSystemConstants
         "N/A",
         "New Background Music",
         "New Background Theme",
-        "N/A",
+        "New Character Animation",
         "N/A",
         "N/A"
     };
