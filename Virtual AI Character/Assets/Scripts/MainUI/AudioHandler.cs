@@ -21,6 +21,12 @@ public class AudioHandler : MonoBehaviour
     private string azureVoiceName = "en-US-AnaNeural";
 
     //  Speech → Text  (Azure)-------------------------------------------------
+
+    void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     public void ProcessAudio(AudioClip clip, SpeechToTextCallback callback)
     {
         if (clip == null)
@@ -89,39 +95,38 @@ public class AudioHandler : MonoBehaviour
         StartCoroutine(SpeakTextCoroutine(text, callback));
     }
 
-    private IEnumerator SpeakTextCoroutine(string text, TextToSpeechCallback callback)
+    public IEnumerator SpeakTextCoroutine(string text, TextToSpeechCallback callback)
     {
         // Try local
         using (UnityWebRequest req = CreateLocalTtsRequest(text))
         {
             req.timeout = Mathf.RoundToInt(localRequestTimeout);
 
-            Debug.Log($"[TTS] Trying local server → {text}");
+            Debug.Log($"Trying local TTS server");
             yield return req.SendWebRequest();
 
             if (req.result == UnityWebRequest.Result.Success)
             {
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(req);
-                if (clip != null && clip.length > 0.05f) // basic sanity check
+                if (clip != null && clip.length > 0.05f)
                 {
-                    Debug.Log("[TTS] Local StyleTTS2 succeeded");
+                    Debug.Log("Local TTS succeeded");
                     callback?.Invoke(clip);
                     yield break;
                 }
             }
 
-            Debug.LogWarning($"[TTS] Local server failed ({req.result}): {req.error} → falling back to Azure");
+            Debug.LogWarning($"Local TTS server failed ({req.result}): {req.error} → falling back to Azure");
         }
 
         // Try Azure
-        Debug.Log("[TTS] Using Azure fallback");
         var azureTask = TextToSpeechAzureAsync(text);
         while (!azureTask.IsCompleted) yield return null;
 
         float[] samples = azureTask.Result;
         if (samples == null || samples.Length == 0)
         {
-            Debug.LogError("Azure TTS also failed.");
+            Debug.LogError("Azure failed.");
             callback?.Invoke(null);
             yield break;
         }

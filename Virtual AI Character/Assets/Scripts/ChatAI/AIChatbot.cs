@@ -73,6 +73,7 @@ public class AIChatbot : MonoBehaviour
     // api key -----------------------------------------------------------------
     void Awake()
     {
+        DontDestroyOnLoad(gameObject);
         TextAsset apiKeyAsset = Resources.Load<TextAsset>("GeminiAPIkey");
         if (apiKeyAsset != null)
         {
