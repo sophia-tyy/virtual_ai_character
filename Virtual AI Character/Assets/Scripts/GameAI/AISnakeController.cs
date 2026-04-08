@@ -11,7 +11,7 @@ public class AISnakeController : MonoBehaviour
     public List<Transform> bodyParts = new List<Transform>();
     private int pendingDir = 0;
     public UnityEvent onAteFood;
-    public UnityEvent onDied;
+    public UnityEvent<string> onDied;
 
     void Start()
     {
@@ -48,7 +48,9 @@ public class AISnakeController : MonoBehaviour
 
     void AddBodyPart()
     {
-        GameObject newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().AISnakeParent);
+        GameObject newBody;
+        if (GameController == null) newBody = Instantiate(snakeBodyPrefab);
+        else newBody = Instantiate(snakeBodyPrefab, GameController.GetComponent<GameController>().AISnakeParent);
         Vector3 spawnPos;
         if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
         else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;
@@ -78,6 +80,6 @@ public class AISnakeController : MonoBehaviour
             AddBodyPart();
             onAteFood?.Invoke();
         }
-        else onDied?.Invoke();
+        else onDied?.Invoke(collision.gameObject.tag);
     }
 }

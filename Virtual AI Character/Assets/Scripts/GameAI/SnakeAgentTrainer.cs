@@ -29,7 +29,7 @@ public class SnakeAgentTrainer : Agent
     public float deathPenalty = -20.0f;
     public float surviveReward = 0.00005f;
     public float towardFoodRewardScale = 0.01f;
-    public float awayFromFoodPenaltyScale = -0.01f;
+    public float awayFromFoodPenaltyScale = 0.01f;
 
     public override void Initialize()
     {
@@ -52,9 +52,10 @@ public class SnakeAgentTrainer : Agent
         SpawnFood();
     }
 
-    private void HandleDied()
+    private void HandleDied(string objectTag)
     {
         AddReward(deathPenalty);
+        if (objectTag == "Snake") AddReward(-20f);
         _cumulativeReward = GetCumulativeReward();
         EndEpisode();
     }
@@ -85,24 +86,22 @@ public class SnakeAgentTrainer : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        for (int angle = 0; angle < 360; angle += 45)
-        {
-            Vector2 dir = Quaternion.Euler(0, 0, angle) * Vector2.right;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, 5f, obstacleMask);
-            float distNorm = (hit.collider ? hit.distance : 5f) / 5f;
-            sensor.AddObservation(distNorm);
-            sensor.AddObservation(hit.collider ? 1f : 0f);
-        }
+        Vector2 forward = snake.dir.normalized;
+        if (forward == Vector2.zero) forward = Vector2.up;
 
         if (currentFood != null)
         {
-            Vector2 relFood = ((Vector2)currentFood.transform.position - (Vector2)transform.position).normalized;
-            sensor.AddObservation(relFood);
+            Vector2 toFood = ((Vector2)currentFood.transform.position - (Vector2)transform.position).normalized;
+            float forwardFood = Vector2.Dot(forward, toFood);
+            float rightFood = forward.x * toFood.y - forward.y * toFood.x;
+            sensor.AddObservation(forwardFood);
+            sensor.AddObservation(rightFood);
             sensor.AddObservation(Vector2.Distance(transform.position, currentFood.transform.position) / 10f);
         }
         else
         {
-            sensor.AddObservation(Vector2.zero);
+            sensor.AddObservation(0f);
+            sensor.AddObservation(0f);
             sensor.AddObservation(0f);
         }
 

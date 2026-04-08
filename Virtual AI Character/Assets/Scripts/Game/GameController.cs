@@ -76,7 +76,8 @@ public class GameController : MonoBehaviour
 
     public void EndGame()
     {
-        if (AISnakeController != null) AISnakeController.GetComponent<SnakeAgent>().HandleDied();
+        string temp = "";
+        if (AISnakeController != null) AISnakeController.GetComponent<SnakeAgent>().HandleDied(temp);
         
         GameObject[] snakeObjects = GameObject.FindGameObjectsWithTag("Snake");
         foreach (GameObject snake in snakeObjects) Destroy(snake);

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 1737756897524168515}
   - component: {fileID: 2652485266658794454}
   - component: {fileID: 256371660283204518}
+  - component: {fileID: 5110764474991778326}
   m_Layer: 0
   m_Name: AI_snake_head
   m_TagString: Snake
@@ -80,7 +81,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 32767
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.24705882, g: 0.5294118, b: 0.68235296, a: 1}
+  m_Color: {r: 0.24705882, g: 0.68235296, b: 0.33565944, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -174,6 +175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 922a8f50ccc0399428ffaed2cea29c3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GameController: {fileID: 0}
   dir: {x: 0, y: 1}
   step: 0.2
   snakeBodyPrefab: {fileID: 8604686251067512913, guid: 39d3a6ba529bf004591de7eef49171ff, type: 3}
@@ -197,7 +199,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 24
+    VectorObservationSize: 8
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -249,3 +251,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DecisionPeriod: 5
   TakeActionsBetweenDecisions: 1
+--- !u!114 &5110764474991778326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84336450437971822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f67c7e722ba14acd9153bb4488bff6e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: RayPerceptionSensor
+  m_DetectableTags:
+  - Food
+  - Snake
+  m_RaysPerDirection: 4
+  m_MaxRayDegrees: 90
+  m_SphereCastRadius: 0.2
+  m_RayLength: 15
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ObservationStacks: 1
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
