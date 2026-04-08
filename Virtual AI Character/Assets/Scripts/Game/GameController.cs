@@ -25,7 +25,7 @@ public class GameController : MonoBehaviour
 
     [Header("UI & Events")]
     public GameObject gamePanel;
-    public GameObject startButton;
+    public GameObject startPanel;
 
     public TMP_Text highestScoreText;
     public TMP_Text currentScoreText;
@@ -46,7 +46,7 @@ public class GameController : MonoBehaviour
         currentScoreText.text = CurrentScore.ToString();
     }
 
-    public void StartGame()
+    public void StartGame_Player_AI()
     {
         float x = (borderLeft.position.x + borderRight.position.x) / 2;
         float y = (borderTop.position.y + borderBottom.position.y) / 2;
@@ -58,6 +58,31 @@ public class GameController : MonoBehaviour
         Instantiate(AISnakeHeadPrefab, new Vector2(x + 2, y), Quaternion.identity, AISnakeParent);
         AISnakeController = FindObjectOfType<AISnakeController>();
         if (AISnakeController == null) Debug.LogError("AISnakeController not found!");
+
+        Spawn();
+    }
+
+    public void StartGame_Player()
+    {
+        float x = (borderLeft.position.x + borderRight.position.x) / 2;
+        float y = (borderTop.position.y + borderBottom.position.y) / 2;
+
+        Instantiate(playerSnakeHeadPrefab, new Vector2(x, y), Quaternion.identity, playerSnakeParent);
+        playerSnakeController = FindObjectOfType<PlayerSnakeController>();
+        if (playerSnakeController == null) Debug.LogError("PlayerSnakeController not found!");
+
+        Spawn();
+    }
+
+    public void StartGame_AI()
+    {
+        float x = (borderLeft.position.x + borderRight.position.x) / 2;
+        float y = (borderTop.position.y + borderBottom.position.y) / 2;
+
+        Transform AISnake = Instantiate(AISnakeHeadPrefab, new Vector2(x, y), Quaternion.identity, AISnakeParent);
+        AISnakeController = FindObjectOfType<AISnakeController>();
+        if (AISnakeController == null) Debug.LogError("AISnakeController not found!");
+        AISnake.GetComponent<SnakeAgent>().ChangeToSoloMode();
 
         Spawn();
     }
@@ -86,7 +111,7 @@ public class GameController : MonoBehaviour
         foreach (GameObject food in foodObjects) Destroy(food);
 
         gamePanel.SetActive(false);
-        startButton.SetActive(true);
+        startPanel.SetActive(true);
 
         AffectionDataManager.Instance.FinishTask("Play Mini Game Once");
         onGameEnd.Invoke();

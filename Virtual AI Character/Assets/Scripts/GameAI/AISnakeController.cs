@@ -8,6 +8,7 @@ public class AISnakeController : MonoBehaviour
     public Vector2 dir = Vector2.up;
     public float step = 0.2f;
     public GameObject snakeBodyPrefab;
+    public Color snakeBodyColor = Color.green;
     public List<Transform> bodyParts = new List<Transform>();
     private int pendingDir = 0;
     public UnityEvent onAteFood;
@@ -55,6 +56,7 @@ public class AISnakeController : MonoBehaviour
         if (bodyParts.Count == 0) spawnPos = transform.position - (Vector3)dir * 0.2f;
         else spawnPos = bodyParts[bodyParts.Count - 1].position - (Vector3)dir * 0.2f;
         newBody.transform.position = spawnPos;
+        newBody.GetComponent<SpriteRenderer>().color = snakeBodyColor;
         bodyParts.Add(newBody.transform);
     }
 

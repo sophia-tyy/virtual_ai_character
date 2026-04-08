@@ -23,6 +23,13 @@ public class SnakeAgent : Agent
         snake.onDied.AddListener(HandleDied);
     }
 
+    public void ChangeToSoloMode()
+    {
+        snake.onDied.RemoveListener(HandleDied);
+        snake.onDied.AddListener(HandleDied_solo);
+        Debug.Log("SnakeAgent switched to solo mode.");
+    }
+
     private void HandleAteFood() { GameController.GetComponent<GameController>().Spawn(); }
 
     public void HandleDied(string objectTag)
@@ -34,6 +41,11 @@ public class SnakeAgent : Agent
             snake.bodyParts.Clear();
         }
         Destroy(snake.gameObject);
+    }
+
+    public void HandleDied_solo(string objectTag)
+    {
+        GameController.GetComponent<GameController>().EndGame();
     }
 
     public override void OnEpisodeBegin()
@@ -64,15 +76,6 @@ public class SnakeAgent : Agent
     {
         Vector2 forward = snake.dir.normalized;
         if (forward == Vector2.zero) forward = Vector2.up;
-
-        // for (int angle = 0; angle < 360; angle += 45)
-        // {
-        //     Vector2 dir = Quaternion.Euler(0, 0, angle) * forward;
-        //     RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, 5f, obstacleMask);
-        //     float distNorm = (hit.collider ? hit.distance : 5f) / 5f;
-        //     sensor.AddObservation(distNorm);
-        //     sensor.AddObservation(hit.collider ? 1f : 0f);
-        // }
 
         FindFood();
         if (targetFood != null)
