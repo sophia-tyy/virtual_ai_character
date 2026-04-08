@@ -11,31 +11,53 @@ public class EmotionAnimatorLink : MonoBehaviour
     [Header("=== Settings ===")]
     [Range(0f, 1f)] public float threshold = 0.3f;
     private Animator anim;
-    private readonly Dictionary<string, float> prev = new();
-    private readonly Dictionary<string, string> map = new()
-    {
-        { "happy",     "happy" },
-        { "sad",       "sad" },
-        { "angry",     "angry" },
-        { "surprised", "surprise" },
-        { "neutral",   "neutral" },
-        { "curiuos",   "curious" },
-        { "disgusted", "nonono" }
-    };
+    private AffectionData data;
+    private Dictionary<string, float> prev = new();
+    private Dictionary<string, string> map = new();
     private string lastStrongestEmotion = null;
     private float lastStrongestValue = float.NaN;
     public float stabilityEpsilon = 0.1f;
     private CubismFadeController fadeCtrl;
     private int lastLineCount = -1;
     private readonly string chatHistoryFileName = "chat_history.txt";
+    private string savePath;
 
     private void Awake()
     {
         anim = GetComponent<Animator>();
+        savePath = Path.Combine(Application.persistentDataPath, "affection.json");
+        string json = File.ReadAllText(savePath);
+        data = JsonUtility.FromJson<AffectionData>(json);
+
+        if (data.xp >= 3)
+        {
+            Debug.Log("Enable additional emotions.");
+            map = new Dictionary<string, string>
+            {
+                { "happy", "happy" },
+                { "sad", "sad" },
+                { "angry", "angry" },
+                { "surprised", "surprise" },
+                { "neutral", "neutral" },
+                { "curious", "curious" },
+                { "disgusted", "nonono" }
+            };
+        }
+        else
+        {
+            Debug.Log("Enable default emotions.");
+            map = new Dictionary<string, string>
+            {
+                { "happy", "happy" },
+                { "sad", "sad" },
+                { "angry", "angry" },
+                { "surprised", "surprise" },
+            };
+        }
 
         if (emotionSource == null)
         {
-            Debug.LogError("[EmotionAnimatorLink] Assign script in AnimationHandler Inspector");
+            Debug.LogError("Assign script in AnimationHandler Inspector!!");
             enabled = false;
             return;
         }
@@ -45,10 +67,11 @@ public class EmotionAnimatorLink : MonoBehaviour
         if (fadeCtrl != null)
         {
             fadeCtrl.enabled = false;
-            Debug.Log("[EmotionAnimatorLink] Disabled CubismFadeController");
         }
 
     }
+
+    
 
     private void Update()
     {
@@ -147,11 +170,7 @@ public class EmotionAnimatorLink : MonoBehaviour
 
         if (stable)
         {
-            if (isSameEmotion)
-            {
-                //skip
-            }
-            else
+            if (!isSameEmotion)
             {
                 anim.SetTrigger(trig);
                 Debug.Log($"[EmotionAnimatorLink] Triggered animation '{trig}' for emotion '{best}' with value {bestVal:F2}");
