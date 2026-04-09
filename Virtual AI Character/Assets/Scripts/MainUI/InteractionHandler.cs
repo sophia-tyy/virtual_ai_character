@@ -164,6 +164,7 @@ public class InteractionHandler : MonoBehaviour
                 outputText.text = $"{aiResponse}";
                 currentInputMode = InputMode.None;
             });
+            AffectionDataManager.Instance.FinishTask("Complete a Text Conversation");
         }));
     }
 
@@ -187,6 +188,7 @@ public class InteractionHandler : MonoBehaviour
                 outputText.text = $"{aiResponse}";
                 currentInputMode = InputMode.None;
             });
+            AffectionDataManager.Instance.FinishTask("Complete an Audio Conversation");
         }));
     }
 
