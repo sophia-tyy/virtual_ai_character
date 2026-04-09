@@ -12,9 +12,16 @@ public class PlayerSnakeController : MonoBehaviour
     private List<Transform> bodyParts = new List<Transform>();
     public GameObject GameController;
 
+    private AudioSource GameSoundEffect;
+    private AudioClip eatFoodClip;
+    private AudioClip gameOverClip;
+
     void Start()
     {
         GameController = GameObject.Find("GameController");
+        GameSoundEffect = GameObject.Find("SoundEffect").GetComponent<AudioSource>();
+        eatFoodClip = Resources.Load<AudioClip>("GameSoundEffect/eat_food");
+        gameOverClip = Resources.Load<AudioClip>("GameSoundEffect/game_over");
         for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
@@ -43,6 +50,7 @@ public class PlayerSnakeController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Food"))
         {
+            GameSoundEffect.PlayOneShot(eatFoodClip);
             Destroy(collision.gameObject);
             GameDataManager.Instance.AddScore(1);
             GameController.GetComponent<GameController>().UpdateDisplayScores();
@@ -51,6 +59,7 @@ public class PlayerSnakeController : MonoBehaviour
         }
         else
         {
+            GameSoundEffect.PlayOneShot(gameOverClip);
             CancelInvoke();
             GameDataManager.Instance.ResetCurrentScore();
             GameController.GetComponent<GameController>().UpdateDisplayScores();

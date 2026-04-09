@@ -13,10 +13,16 @@ public class AISnakeController : MonoBehaviour
     private int pendingDir = 0;
     public UnityEvent onAteFood;
     public UnityEvent<string> onDied;
+    private AudioSource GameSoundEffect;
+    private AudioClip eatFoodClip;
+    private AudioClip gameOverClip;
 
     void Start()
     {
         GameController = GameObject.Find("GameController");
+        GameSoundEffect = GameObject.Find("SoundEffect").GetComponent<AudioSource>();
+        eatFoodClip = Resources.Load<AudioClip>("GameSoundEffect/eat_food");
+        gameOverClip = Resources.Load<AudioClip>("GameSoundEffect/game_over");
         for (int i = 0; i < 3; i++) AddBodyPart();
         InvokeRepeating("Move", 0.3f, 0.5f);
     }
@@ -78,10 +84,15 @@ public class AISnakeController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Food"))
         {
+            GameSoundEffect.PlayOneShot(eatFoodClip);
             Destroy(collision.gameObject);
             AddBodyPart();
             onAteFood?.Invoke();
         }
-        else onDied?.Invoke(collision.gameObject.tag);
+        else
+        {
+            GameSoundEffect.PlayOneShot(gameOverClip);
+            onDied?.Invoke(collision.gameObject.tag);
+        }
     }
 }

@@ -24,6 +24,7 @@ public class GameController : MonoBehaviour
     public Transform borderBottom;
 
     [Header("UI & Events")]
+    public AudioSource GameSoundEffect;
     public GameObject gamePanel;
     public GameObject startPanel;
 
@@ -31,10 +32,12 @@ public class GameController : MonoBehaviour
     public TMP_Text currentScoreText;
 
     public UnityEvent onGameEnd;
+    private AudioClip gameStartClip;
 
     void Start()
     {
         UpdateDisplayScores();
+        gameStartClip = Resources.Load<AudioClip>("GameSoundEffect/game_start");
     }
 
     public void UpdateDisplayScores()
@@ -59,6 +62,8 @@ public class GameController : MonoBehaviour
         AISnakeController = FindObjectOfType<AISnakeController>();
         if (AISnakeController == null) Debug.LogError("AISnakeController not found!");
 
+        GameSoundEffect.PlayOneShot(gameStartClip);
+
         Spawn();
     }
 
@@ -70,6 +75,8 @@ public class GameController : MonoBehaviour
         Instantiate(playerSnakeHeadPrefab, new Vector2(x, y), Quaternion.identity, playerSnakeParent);
         playerSnakeController = FindObjectOfType<PlayerSnakeController>();
         if (playerSnakeController == null) Debug.LogError("PlayerSnakeController not found!");
+
+        GameSoundEffect.PlayOneShot(gameStartClip);
 
         Spawn();
     }
@@ -83,6 +90,8 @@ public class GameController : MonoBehaviour
         AISnakeController = FindObjectOfType<AISnakeController>();
         if (AISnakeController == null) Debug.LogError("AISnakeController not found!");
         AISnake.GetComponent<SnakeAgent>().ChangeToSoloMode();
+
+        GameSoundEffect.PlayOneShot(gameStartClip);
 
         Spawn();
     }
