@@ -84,14 +84,14 @@ public class AISnakeController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Food"))
         {
-            GameSoundEffect.PlayOneShot(eatFoodClip);
+            if (GameSoundEffect != null) GameSoundEffect.PlayOneShot(eatFoodClip);
             Destroy(collision.gameObject);
             AddBodyPart();
             onAteFood?.Invoke();
         }
         else
         {
-            GameSoundEffect.PlayOneShot(gameOverClip);
+            if (GameSoundEffect != null) GameSoundEffect.PlayOneShot(gameOverClip);
             onDied?.Invoke(collision.gameObject.tag);
         }
     }
