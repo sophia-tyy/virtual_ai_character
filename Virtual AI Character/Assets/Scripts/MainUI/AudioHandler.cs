@@ -144,6 +144,7 @@ public class AudioHandler : MonoBehaviour
         var request = UnityWebRequest.Post(localTtsUrl, form);
         request.downloadHandler = new DownloadHandlerAudioClip(localTtsUrl, AudioType.WAV);
         request.SetRequestHeader("Accept", "audio/wav");
+        request.timeout = 120;
 
         return request;
     }
